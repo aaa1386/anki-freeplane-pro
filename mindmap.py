@@ -140,7 +140,7 @@ def remove_old_notes(mindmap_files: dict):
         showInfo(f"Model '{model_name}' not found.")
         return 0
 
-    mw.col.models.setCurrent(model)  # ✅ Fix: Ensure model is active
+    mw.col.models.setCurrent(model)
 
     cids = mw.col.findNotes(f"mid:{model['id']}")
     notes = [mw.col.getNote(cid) for cid in cids]
@@ -239,10 +239,10 @@ def importMindmapFromFolder():
 # ============================
 # Menu actions
 # ============================
-action_import_file = QAction("📄 Import Mindmap from File", mw)
+action_import_file = QAction("📄 Import Cards from Freeplane File", mw)
 action_import_file.triggered.connect(importMindmapFromFile)
 mw.form.menuTools.addAction(action_import_file)
 
-action_import_folder = QAction("📂 Import Mindmaps from Folder (and Subfolders)", mw)
+action_import_folder = QAction("📂 Import Cards from Folder (and Subfolders)", mw)
 action_import_folder.triggered.connect(importMindmapFromFolder)
 mw.form.menuTools.addAction(action_import_folder)
