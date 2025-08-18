@@ -2,7 +2,6 @@ import uuid
 import os
 import urllib.parse
 
-
 class Node:
     def __init__(self, doc, element, file_path=None):
         self.doc = doc
@@ -24,7 +23,6 @@ class Node:
 
     # ------------------ بررسی کارت ------------------
     def should_create_card(self):
-        """کارت ساخته می‌شود اگر anki:model یا anki:deck وجود داشته باشد"""
         model_attr = self.element.find('attribute[@NAME="anki:model"]')
         deck_attr = self.element.find('attribute[@NAME="anki:deck"]')
         return bool(model_attr or deck_attr)
@@ -44,7 +42,6 @@ class Node:
         return None
 
     def get_final_deck(self):
-        """دسته نهایی کارت بر اساس نود خود و اجداد"""
         deck = self.get_deck()
         if deck:
             return deck
@@ -76,23 +73,53 @@ class Node:
         node_text = self.element.get('TEXT') or ''
         node_id = self.get_node_id()
 
-        has_field_attr = False
         for attr in attributes:
             name = attr.get('NAME')
             if name and name.startswith('anki:field:'):
-                has_field_attr = True
                 field_name = name[len('anki:field:'):]
                 value = attr.get('VALUE') or ''
                 if value == '*':
                     value = node_text
                 fields[field_name] = value
 
-        # Front و Path
         fields['Front'] = node_text
         fields['Path'] = self.__build_custom_path_link(node_id)
 
         self.fields = fields
         return fields
+
+    # ------------------ پشت کارت ------------------
+    def get_back_content(self):
+        fields = self.get_fields()
+        back_value = fields.get('Back', '').strip()
+        if back_value:
+            return back_value
+        return self._build_back_from_children()
+
+    def _build_back_from_children(self):
+        children = self.get_children()
+        if not children:
+            return ''
+
+        symbols = ['■', '●', '○']
+        max_symbols = len(symbols)
+
+        def recurse(nodes, level=0):
+            lines = []
+            symbol = symbols[min(level, max_symbols - 1)]
+            for node in nodes:
+                text = node.get_text().strip()
+                if not text:
+                    continue
+                lines.append(f"{symbol} {text}")
+                child_lines = recurse(node.get_children(), level + 1)
+                if child_lines:
+                    indented = ['  ' + l for l in child_lines]
+                    lines.extend(indented)
+            return lines
+
+        lines = recurse(children)
+        return '\n'.join(lines)
 
     # ------------------ لینک مسیر ------------------
     def __build_custom_path_link(self, node_id):
@@ -102,7 +129,6 @@ class Node:
         encoded_path = urllib.parse.quote(abs_path)
         anchor = 'ID_' + node_id
 
-        # مسیر سلسله‌مراتبی
         path_nodes = []
         current = self.element
         while current is not None:
@@ -110,7 +136,10 @@ class Node:
             current = self.__get_parent_node(current)
         path_nodes.reverse()
 
-        # کوتاه‌سازی مسیر
+        # حذف خود کارت از مسیر (مثل نسخه قبلی)
+        if len(path_nodes) > 1:
+            path_nodes = path_nodes[:-1]
+
         min_nodes = 5
         max_total_words = 30
 
@@ -120,8 +149,7 @@ class Node:
         if len(path_nodes) <= min_nodes and count_words(path_nodes) <= max_total_words:
             path_text = " ← ".join(path_nodes)
         else:
-            # کوتاه شده با "..."
-            path_text = " ← ".join([path_nodes[0]] + ["..."] + path_nodes[-(min_nodes-1):])
+            path_text = " ← ".join([path_nodes[0]] + ["..."] + path_nodes[-(min_nodes - 1):])
 
         return f'<a href="freeplane:/%20/{encoded_path}#{anchor}" style="text-decoration:none;">{path_text}</a>'
 
@@ -135,9 +163,8 @@ class Node:
             self.children = children_nodes
         return self.children
 
-    # ------------------ گرفتن همه نودهای کارت‌دار ------------------
+    # ------------------ نودهای کارت‌دار ------------------
     def get_card_nodes(self):
-        """لیست تمام نودهایی که باید کارت ساخته شوند"""
         card_nodes = []
         if self.should_create_card():
             card_nodes.append(self)
@@ -145,7 +172,7 @@ class Node:
             card_nodes.extend(child.get_card_nodes())
         return card_nodes
 
-    # ------------------ کمک‌کننده‌ها ------------------
+    # ------------------ کمکی‌ها ------------------
     def __get_parent_node(self, element):
         current_id = element.get('ID')
         for node in self.doc.findall('.//node'):
@@ -156,3 +183,14 @@ class Node:
 
     def get_text(self):
         return self.element.get('TEXT') or ''
+
+    def to_dict(self):
+        fields = self.get_fields()
+        fields['Back'] = self.get_back_content()
+        return {
+            'id': self.get_node_id(),
+            'deck': self.get_final_deck(),
+            'model': self.get_model(),
+            'fields': fields,
+            'PFile': self.file_path or ''
+        }
