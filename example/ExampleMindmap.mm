@@ -3,8 +3,8 @@
 <bookmarks>
     <bookmark nodeId="ID_1723255651" name="Root" opensAsRoot="true"/>
 </bookmarks>
-<node TEXT="Import test" FOLDED="false" ID="ID_1723255651" CREATED="1283093380553" MODIFIED="1583261765174"><hook NAME="MapStyle">
-    <properties show_icon_for_attributes="true" edgeColorConfiguration="#808080ff,#808080ff,#808080ff,#808080ff,#808080ff" show_note_icons="true" fit_to_viewport="false" show_icons="BESIDE_NODES" showTagCategories="false" show_tags="UNDER_NODES"/>
+<node TEXT="F" FOLDED="false" ID="ID_1723255651" CREATED="1283093380553" MODIFIED="1755525432509"><hook NAME="MapStyle">
+    <properties show_icon_for_attributes="true" edgeColorConfiguration="#808080ff,#808080ff,#808080ff,#808080ff,#808080ff" show_tags="UNDER_NODES" show_note_icons="true" fit_to_viewport="false" show_icons="BESIDE_NODES" showTagCategories="false"/>
     <tags category_separator="::"/>
 
 <map_styles>
@@ -79,7 +79,7 @@
 </node>
 <node TEXT="2. Click Tools --&gt;" ID="ID_713570783" CREATED="1583678049585" MODIFIED="1755523781870">
 <node TEXT="Manage Excluded Paths" ID="ID_1796604965" CREATED="1755523729828" MODIFIED="1755523732826"/>
-<node TEXT="Import Mindmap from File&#xa;Import Mindmaps from Folder (and Subfolders)" ID="ID_236841458" CREATED="1755523733735" MODIFIED="1755523743822"/>
+<node TEXT="Import cards from Freeplane File&#xa;Import cards from Folder (and Subfolders)" ID="ID_236841458" CREATED="1755523733735" MODIFIED="1755525478838"/>
 </node>
 <node TEXT="3. Click Browse and view cards in FreeplaneDeck deck" ID="ID_382222419" CREATED="1583678280162" MODIFIED="1583678289277"/>
 </node>
@@ -88,7 +88,7 @@
 <node TEXT="Deck" POSITION="bottom_or_right" ID="ID_793372572" CREATED="1415464979694" MODIFIED="1583262198781">
 <edge COLOR="#00ff00"/>
 <attribute NAME="anki:deck" VALUE="FreeplaneDeck"/>
-<node TEXT="This is the front of card A" ID="ID_1194397559" CREATED="1415304958826" MODIFIED="1583678179420">
+<node TEXT="F" ID="ID_1194397559" CREATED="1415304958826" MODIFIED="1755525422505">
 <attribute NAME="anki:model" VALUE="Freeplane basic"/>
 <attribute NAME="anki:field:Front" VALUE="*"/>
 <node TEXT="jjjjjjj" ID="ID_1284001005" CREATED="1755524486580" MODIFIED="1755524489141"/>
