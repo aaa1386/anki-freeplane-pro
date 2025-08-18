@@ -94,12 +94,17 @@ class Node:
         encoded_path = urllib.parse.quote(abs_path)
         anchor = 'ID_' + node_id
 
+        # ساختن مسیر از روت تا کارت
         path_nodes = []
         current = self.element
         while current is not None:
             path_nodes.append(current.get('TEXT') or '')
             current = self.__get_parent_node(current)
         path_nodes.reverse()
+
+        # حذف آخرین گره (خود کارت)
+        if len(path_nodes) > 1:
+            path_nodes = path_nodes[:-1]
 
         min_nodes = 5
         max_total_words = 30
@@ -167,7 +172,7 @@ class Reader:
             node = Node(doc, element, file_path=file_path)
             notes.append(node.to_dict())
 
-        print(f"Found {len(notes)} notes in mindmap")  # هشدار انگلیسی
+        print(f"Found {len(notes)} notes in mindmap")  # پیام انگلیسی
         return notes
 
 # ------------------ تابع کمکی برای پوشه ------------------
