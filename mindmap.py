@@ -1,248 +1,122 @@
+import uuid
 import os
-import xml.etree.ElementTree as ET
-from aqt import mw
-from aqt.utils import showInfo
-from aqt.qt import QAction, QFileDialog, QDialog, QVBoxLayout, QListWidget, QPushButton, QMessageBox
+import urllib.parse
 
-from .freeplane_importer.model_not_found_exception import ModelNotFoundException
-from .freeplane_importer.reader import Reader
-from .freeplane_importer.importer import Importer
+class Node:
+    def __init__(self, doc, element, file_path=None):
+        self.doc = doc
+        self.element = element
+        self.file_path = file_path
+        self.fields = False
+        self.children = False
+        self._cached_node_id = None
 
-EXCLUDE_FROM_DELETE_FILE = os.path.join(os.path.dirname(__file__), "exclude_files.txt")
+    # ------------------ تبدیل به دیکشنری ------------------
+    def to_dict(self):
+        return {
+            'id': self.get_node_id(),
+            'deck': self.get_final_deck(),
+            'model': self.get_model(),
+            'fields': self.get_fields()  # توجه: Path فقط نگهداری داخلی
+        }
 
-# ============================
-# Manage excluded paths
-# ============================
-def load_exclude_list():
-    if os.path.exists(EXCLUDE_FROM_DELETE_FILE):
-        with open(EXCLUDE_FROM_DELETE_FILE, "r", encoding="utf-8") as f:
-            return [line.strip() for line in f if line.strip()]
-    return []
+    # ------------------ گرفتن فیلدها ------------------
+    def get_fields(self, fields=None):
+        if fields is None:
+            fields = {}
 
-def save_exclude_list(lst):
-    with open(EXCLUDE_FROM_DELETE_FILE, "w", encoding="utf-8") as f:
-        for item in lst:
-            f.write(f"{item}\n")
+        if self.fields is False:
+            fields = self.__parse_fields(fields)
+            # Front و Back مثل سابق
+            if 'Back' not in fields or not fields['Back']:
+                outline = self.__build_outline_recursive(self.get_children(), depth=0)
+                fields['Back'] = outline
+            # نگهداری Path برای استفاده داخلی، ولی به آنکی تزریق اجباری نمی‌کنیم
+            fields['_Path'] = fields.get('Path', '')
+            # Path اصلی حذف می‌شود از این مرحله تا اجباری تزریق نشود
+            if 'Path' in fields:
+                del fields['Path']
 
-class ExcludeManagerDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Manage Excluded Paths")
-        self.resize(600, 400)
+            self.fields = {k: (v or '') for k, v in fields.items()}
 
-        self.layout = QVBoxLayout(self)
-        self.list_widget = QListWidget()
-        self.layout.addWidget(self.list_widget)
-        self.load_list()
+        return self.fields
 
-        self.btn_add_file = QPushButton("Add File")
-        self.btn_add_folder = QPushButton("Add Folder")
-        self.btn_remove = QPushButton("Remove Selected")
-        self.layout.addWidget(self.btn_add_file)
-        self.layout.addWidget(self.btn_add_folder)
-        self.layout.addWidget(self.btn_remove)
+    def __parse_fields(self, fields):
+        attributes = self.element.findall('attribute')
+        node_text = self.element.get('TEXT') or ''
+        node_id = self.get_node_id()
 
-        self.btn_add_file.clicked.connect(self.add_file)
-        self.btn_add_folder.clicked.connect(self.add_folder)
-        self.btn_remove.clicked.connect(self.remove_selected)
+        # Front فقط متن ساده نود
+        fields['Front'] = node_text
 
-    def load_list(self):
-        self.list_widget.clear()
-        for path in load_exclude_list():
-            self.list_widget.addItem(path)
+        # گرفتن سایر فیلدهای آنکی
+        for attr in attributes:
+            name = attr.get('NAME')
+            if name and name.startswith('anki:field:'):
+                field_name = name[len('anki:field:'):]
+                value = attr.get('VALUE') or ''
+                if value == '*':
+                    value = node_text
+                fields[field_name] = value
 
-    def add_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(caption="Select a file to exclude")
-        if file_path:
-            lst = load_exclude_list()
-            if file_path not in lst:
-                lst.append(file_path)
-                save_exclude_list(lst)
-                self.load_list()
-                QMessageBox.information(self, "Success", f"File {file_path} added to exclude list.")
+        # Path شامل لینک راست‌چین مسیر سلسله مراتبی، اما فعلاً نگهداری داخلی
+        fields['Path'] = self.__build_custom_path_link(node_id)
 
-    def add_folder(self):
-        folder_path = QFileDialog.getExistingDirectory(caption="Select a folder to exclude")
-        if folder_path:
-            lst = load_exclude_list()
-            if folder_path not in lst:
-                lst.append(folder_path)
-                save_exclude_list(lst)
-                self.load_list()
-                QMessageBox.information(self, "Success", f"Folder {folder_path} added to exclude list.")
+        return fields
 
-    def remove_selected(self):
-        selected_items = self.list_widget.selectedItems()
-        if not selected_items:
-            return
-        lst = load_exclude_list()
-        for item in selected_items:
-            path = item.text()
-            if path in lst:
-                lst.remove(path)
-        save_exclude_list(lst)
-        self.load_list()
-        QMessageBox.information(self, "Success", "Selected path(s) removed.")
+    # ------------------ سایر متدها همانند قبل ------------------
+    def get_node_id(self):
+        if self._cached_node_id is not None:
+            return self._cached_node_id
+        node_id = self.element.get('ID')
+        if not node_id:
+            node_id = str(uuid.uuid4())
+        if node_id.startswith('ID_'):
+            node_id = node_id[3:]
+        self._cached_node_id = node_id
+        return node_id
 
-def open_exclude_manager():
-    dlg = ExcludeManagerDialog(mw)
-    dlg.exec()
+    def get_model(self):
+        return self.get_attribute('anki:model') or 'Freeplane basic'
 
-action_manage_exclude = QAction("🛡 Manage Excluded Paths", mw)
-action_manage_exclude.triggered.connect(open_exclude_manager)
-mw.form.menuTools.addAction(action_manage_exclude)
+    def get_deck(self):
+        deck_attr = self.element.find('attribute[@NAME="anki:deck"]')
+        if deck_attr is not None and deck_attr.get('VALUE') and deck_attr.get('VALUE').strip():
+            return deck_attr.get('VALUE').strip()
+        current = self.element
+        while True:
+            parent = self.__get_parent_node(current)
+            if parent is None:
+                return 'FreeplaneDeck'
+            deck_attr = parent.find('attribute[@NAME="anki:deck"]')
+            if deck_attr is not None and deck_attr.get('VALUE') and deck_attr.get('VALUE').strip():
+                return deck_attr.get('VALUE').strip()
+            current = parent
 
-# ============================
-# Helpers
-# ============================
-def normalize_id(node_id: str) -> str:
-    if node_id.startswith("ID_"):
-        return node_id[3:]
-    return node_id
+    def get_final_deck(self):
+        deck = self.get_deck()
+        return deck if deck else 'FreeplaneDeck'
 
-def normalize_pfile(pfile_url: str) -> str:
-    if not pfile_url:
-        return ""
-    pfile_url = pfile_url.split("#")[0]
-    prefix = "freeplane:/%20/"
-    if pfile_url.startswith(prefix):
-        pfile_url = pfile_url[len(prefix):]
-    return os.path.normcase(os.path.normpath(pfile_url))
+    def __get_parent_node(self, element):
+        current_id = element.get('ID')
+        for node in self.doc.findall('.//node'):
+            for child in node.findall('node'):
+                if child.get('ID') == current_id:
+                    return node
+        return None
 
-def get_ids_from_file(file_path):
-    ids = set()
-    try:
-        tree = ET.parse(file_path)
-        root = tree.getroot()
-        for node in root.iter('node'):
-            node_id = node.attrib.get('ID')
-            if node_id:
-                ids.add(normalize_id(node_id))
-    except Exception as e:
-        showInfo(f"Error reading file {file_path}:\n{e}")
-    return ids
+    def should_create_card(self):
+        model_attr = self.element.find('attribute[@NAME="anki:model"]')
+        deck_attr = self.element.find('attribute[@NAME="anki:deck"]')
+        return bool(model_attr or deck_attr)
 
-def is_excluded(pfile: str):
-    pfile_norm = os.path.normcase(os.path.normpath(pfile))
-    for excl in load_exclude_list():
-        excl_norm = os.path.normcase(os.path.normpath(excl))
-        if pfile_norm == excl_norm or pfile_norm.startswith(excl_norm + os.sep):
-            return True
-    return False
+    def get_children(self):
+        if self.children is False:
+            self.children = [Node(self.doc, c, self.file_path) for c in self.element.findall('node')]
+        return self.children
 
-# ============================
-# Remove old notes
-# ============================
-def remove_old_notes(mindmap_files: dict):
-    model_name = "Freeplane basic"
-    model = mw.col.models.byName(model_name)
-    if not model:
-        showInfo(f"Model '{model_name}' not found.")
-        return 0
+    def get_text(self):
+        return self.element.get('TEXT') or ''
 
-    mw.col.models.setCurrent(model)
-
-    cids = mw.col.findNotes(f"mid:{model['id']}")
-    notes = [mw.col.getNote(cid) for cid in cids]
-
-    to_delete = []
-    normalized_files = {os.path.normcase(os.path.normpath(fp)): ids for fp, ids in mindmap_files.items()}
-
-    for note in notes:
-        pfile = note["PFile"] if "PFile" in note else None
-        node_id = note["ID"] if "ID" in note else None
-        if not pfile or not node_id:
-            continue
-        pfile_norm = normalize_pfile(pfile)
-        if is_excluded(pfile_norm):
-            continue
-        if pfile_norm not in normalized_files:
-            continue
-        node_id = normalize_id(node_id)
-        if node_id not in normalized_files[pfile_norm]:
-            to_delete.append(note.id)
-
-    if to_delete:
-        mw.col.remNotes(to_delete)
-        mw.reset()
-    return len(to_delete)
-
-# ============================
-# Import functions
-# ============================
-def importMindmapFromFile():
-    file_path, _ = QFileDialog.getOpenFileName(caption="Select a .mm file", filter="Freeplane mindmap files (*.mm)")
-    if not file_path:
-        return
-
-    mindmap_files = {file_path: get_ids_from_file(file_path)}
-    deleted = remove_old_notes(mindmap_files)
-    if deleted:
-        showInfo(f"{deleted} old notes removed.")
-
-    importer = Importer(mw.col)
-    reader = Reader()
-    total_imported = 0
-    try:
-        notes = reader.get_notes(ET.parse(file_path), file_path)
-        for note in notes:
-            note["PFile"] = file_path
-            try:
-                importer.import_note(note)
-            except ModelNotFoundException as e:
-                showInfo(f"Model not found: {e.model_name}")
-        total_imported += len(notes)
-    except Exception as e:
-        showInfo(f"Error importing notes from file {file_path}:\n{e}")
-
-    mw.reset()
-    showInfo(f"{total_imported} notes imported from file.")
-
-def importMindmapFromFolder():
-    folder = QFileDialog.getExistingDirectory(caption="Select a folder")
-    if not folder:
-        return
-
-    mm_files = []
-    for root, dirs, files in os.walk(folder):
-        for file in files:
-            if file.lower().endswith(".mm"):
-                mm_files.append(os.path.join(root, file))
-    if not mm_files:
-        showInfo("No .mm files found in folder or subfolders.")
-        return
-
-    mindmap_files = {fp: get_ids_from_file(fp) for fp in mm_files}
-    deleted = remove_old_notes(mindmap_files)
-    if deleted:
-        showInfo(f"{deleted} old notes removed.")
-
-    importer = Importer(mw.col)
-    reader = Reader()
-    total_imported = 0
-    for file_path in mm_files:
-        try:
-            notes = reader.get_notes(ET.parse(file_path), file_path)
-            for note in notes:
-                note["PFile"] = file_path
-                try:
-                    importer.import_note(note)
-                except ModelNotFoundException as e:
-                    showInfo(f"Model not found: {e.model_name}")
-            total_imported += len(notes)
-        except Exception as e:
-            showInfo(f"Error in file {file_path}:\n{e}")
-
-    mw.reset()
-    showInfo(f"{total_imported} notes imported from {len(mm_files)} files.")
-
-# ============================
-# Menu actions
-# ============================
-action_import_file = QAction("📄 Import Cards from Freeplane File", mw)
-action_import_file.triggered.connect(importMindmapFromFile)
-mw.form.menuTools.addAction(action_import_file)
-
-action_import_folder = QAction("📂 Import Cards from Folder (and Subfolders)", mw)
-action_import_folder.triggered.connect(importMindmapFromFolder)
-mw.form.menuTools.addAction(action_import_folder)
+    # ------------------ سایر متدهای HTML و اوت‌لاین همانند قبل ------------------
+    # (__build_custom_path_link و __build_outline_recursive و get_attribute)
