@@ -8,27 +8,23 @@ from .freeplane_importer.model_not_found_exception import ModelNotFoundException
 from .freeplane_importer.reader import Reader
 from .freeplane_importer.importer import Importer
 
-# فایل نگهداری مسیرهای استثنا
 EXCLUDE_FROM_DELETE_FILE = os.path.join(os.path.dirname(__file__), "exclude_files.txt")
 
 # ============================
-# مدیریت مسیرهای استثنا
+# Manage excluded paths
 # ============================
 def load_exclude_list():
-    """بارگذاری مسیرهای استثنا از فایل"""
     if os.path.exists(EXCLUDE_FROM_DELETE_FILE):
         with open(EXCLUDE_FROM_DELETE_FILE, "r", encoding="utf-8") as f:
             return [line.strip() for line in f if line.strip()]
     return []
 
 def save_exclude_list(lst):
-    """ذخیره مسیرهای استثنا در فایل"""
     with open(EXCLUDE_FROM_DELETE_FILE, "w", encoding="utf-8") as f:
         for item in lst:
             f.write(f"{item}\n")
 
 class ExcludeManagerDialog(QDialog):
-    """پنجره مدیریت مسیرهای استثنا"""
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Manage Excluded Paths")
@@ -39,7 +35,6 @@ class ExcludeManagerDialog(QDialog):
         self.layout.addWidget(self.list_widget)
         self.load_list()
 
-        # دکمه‌ها
         self.btn_add_file = QPushButton("Add File")
         self.btn_add_folder = QPushButton("Add Folder")
         self.btn_remove = QPushButton("Remove Selected")
@@ -52,13 +47,11 @@ class ExcludeManagerDialog(QDialog):
         self.btn_remove.clicked.connect(self.remove_selected)
 
     def load_list(self):
-        """بارگذاری لیست مسیرهای استثنا در ویجت"""
         self.list_widget.clear()
         for path in load_exclude_list():
             self.list_widget.addItem(path)
 
     def add_file(self):
-        """افزودن فایل به لیست استثنا"""
         file_path, _ = QFileDialog.getOpenFileName(caption="Select a file to exclude")
         if file_path:
             lst = load_exclude_list()
@@ -69,7 +62,6 @@ class ExcludeManagerDialog(QDialog):
                 QMessageBox.information(self, "Success", f"File {file_path} added to exclude list.")
 
     def add_folder(self):
-        """افزودن پوشه به لیست استثنا"""
         folder_path = QFileDialog.getExistingDirectory(caption="Select a folder to exclude")
         if folder_path:
             lst = load_exclude_list()
@@ -80,7 +72,6 @@ class ExcludeManagerDialog(QDialog):
                 QMessageBox.information(self, "Success", f"Folder {folder_path} added to exclude list.")
 
     def remove_selected(self):
-        """حذف مسیرهای انتخاب شده از لیست استثنا"""
         selected_items = self.list_widget.selectedItems()
         if not selected_items:
             return
@@ -97,22 +88,19 @@ def open_exclude_manager():
     dlg = ExcludeManagerDialog(mw)
     dlg.exec()
 
-# افزودن گزینه مدیریت استثنا به منوی Tools
 action_manage_exclude = QAction("🛡 Manage Excluded Paths", mw)
 action_manage_exclude.triggered.connect(open_exclude_manager)
 mw.form.menuTools.addAction(action_manage_exclude)
 
 # ============================
-# توابع کمکی
+# Helpers
 # ============================
 def normalize_id(node_id: str) -> str:
-    """حذف پیشوند ID_ از شناسه نود"""
     if node_id.startswith("ID_"):
         return node_id[3:]
     return node_id
 
 def normalize_pfile(pfile_url: str) -> str:
-    """تبدیل URL Freeplane به مسیر واقعی فایل"""
     if not pfile_url:
         return ""
     pfile_url = pfile_url.split("#")[0]
@@ -122,7 +110,6 @@ def normalize_pfile(pfile_url: str) -> str:
     return os.path.normcase(os.path.normpath(pfile_url))
 
 def get_ids_from_file(file_path):
-    """دریافت مجموعه شناسه‌های نودها از یک فایل .mm"""
     ids = set()
     try:
         tree = ET.parse(file_path)
@@ -136,7 +123,6 @@ def get_ids_from_file(file_path):
     return ids
 
 def is_excluded(pfile: str):
-    """بررسی اینکه مسیر در لیست استثنا هست یا خیر"""
     pfile_norm = os.path.normcase(os.path.normpath(pfile))
     for excl in load_exclude_list():
         excl_norm = os.path.normcase(os.path.normpath(excl))
@@ -145,23 +131,16 @@ def is_excluded(pfile: str):
     return False
 
 # ============================
-# حذف کارت‌های قدیمی
+# Remove old notes
 # ============================
 def remove_old_notes(mindmap_files: dict):
-    """
-    حذف کارت‌های قدیمی قبل از وارد کردن کارت‌های جدید
-    کارت حذف می‌شود اگر:
-    - مسیر PFile کارت در فایل‌های انتخاب شده باشد
-    - و ID نود کارت در فایل مربوطه وجود نداشته باشد
-    """
     model_name = "Freeplane basic"
     model = mw.col.models.byName(model_name)
     if not model:
         showInfo(f"Model '{model_name}' not found.")
         return 0
 
-    # اطمینان از انتخاب مدل صحیح
-    mw.col.models.setCurrent(model)
+    mw.col.models.setCurrent(model)  # ✅ Fix: Ensure model is active
 
     cids = mw.col.findNotes(f"mid:{model['id']}")
     notes = [mw.col.getNote(cid) for cid in cids]
@@ -189,10 +168,9 @@ def remove_old_notes(mindmap_files: dict):
     return len(to_delete)
 
 # ============================
-# وارد کردن کارت‌ها
+# Import functions
 # ============================
 def importMindmapFromFile():
-    """وارد کردن کارت‌ها از یک فایل .mm"""
     file_path, _ = QFileDialog.getOpenFileName(caption="Select a .mm file", filter="Freeplane mindmap files (*.mm)")
     if not file_path:
         return
@@ -221,7 +199,6 @@ def importMindmapFromFile():
     showInfo(f"{total_imported} notes imported from file.")
 
 def importMindmapFromFolder():
-    """وارد کردن کارت‌ها از پوشه و زیرپوشه‌ها"""
     folder = QFileDialog.getExistingDirectory(caption="Select a folder")
     if not folder:
         return
@@ -260,7 +237,7 @@ def importMindmapFromFolder():
     showInfo(f"{total_imported} notes imported from {len(mm_files)} files.")
 
 # ============================
-# افزودن گزینه‌ها به منوی Tools
+# Menu actions
 # ============================
 action_import_file = QAction("📄 Import Mindmap from File", mw)
 action_import_file.triggered.connect(importMindmapFromFile)
