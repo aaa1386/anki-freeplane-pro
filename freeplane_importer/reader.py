@@ -3,7 +3,7 @@ import uuid
 import urllib.parse
 import xml.etree.ElementTree as ET
 
-# ------------------ کلاس Node ------------------
+
 class Node:
     def __init__(self, doc, element, file_path=None):
         self.doc = doc
@@ -87,6 +87,38 @@ class Node:
         self.fields = fields
         return fields
 
+    def get_back_content(self):
+        fields = self.get_fields()
+        back_value = fields.get('Back', '').strip()
+        if back_value:
+            return back_value
+        return self._build_back_from_children()
+
+    def _build_back_from_children(self):
+        children = self.get_children()
+        if not children:
+            return ''
+
+        symbols = ['■', '●', '○']
+        max_symbols = len(symbols)
+
+        def recurse(nodes, level=0):
+            lines = []
+            symbol = symbols[min(level, max_symbols - 1)]
+            for node in nodes:
+                text = node.get_text().strip()
+                if not text:
+                    continue
+                lines.append(f"{symbol} {text}")
+                child_lines = recurse(node.get_children(), level + 1)
+                if child_lines:
+                    indented = ['  ' + l for l in child_lines]
+                    lines.extend(indented)
+            return lines
+
+        lines = recurse(children)
+        return '\n'.join(lines)
+
     def __build_custom_path_link(self, node_id):
         if not self.file_path:
             return ''
@@ -94,7 +126,6 @@ class Node:
         encoded_path = urllib.parse.quote(abs_path)
         anchor = 'ID_' + node_id
 
-        # ساختن مسیر از روت تا کارت
         path_nodes = []
         current = self.element
         while current is not None:
@@ -102,7 +133,7 @@ class Node:
             current = self.__get_parent_node(current)
         path_nodes.reverse()
 
-        # حذف آخرین گره (خود کارت)
+        # حذف خود کارت از مسیر
         if len(path_nodes) > 1:
             path_nodes = path_nodes[:-1]
 
@@ -115,7 +146,7 @@ class Node:
         if len(path_nodes) <= min_nodes and count_words(path_nodes) <= max_total_words:
             path_text = " ← ".join(path_nodes)
         else:
-            path_text = " ← ".join([path_nodes[0]] + ["..."] + path_nodes[-(min_nodes-1):])
+            path_text = " ← ".join([path_nodes[0]] + ["..."] + path_nodes[-(min_nodes - 1):])
 
         return f'<a href="freeplane:/%20/{encoded_path}#{anchor}" style="text-decoration:none;">{path_text}</a>'
 
@@ -148,15 +179,17 @@ class Node:
         return self.element.get('TEXT') or ''
 
     def to_dict(self):
+        fields = self.get_fields()
+        fields['Back'] = self.get_back_content()  # مقدار Back جایگزین می‌شود
         return {
             'id': self.get_node_id(),
             'deck': self.get_final_deck(),
             'model': self.get_model(),
-            'fields': self.get_fields(),
+            'fields': fields,
             'PFile': self.file_path or ''
         }
 
-# ------------------ کلاس Reader ------------------
+
 class Reader:
     def get_notes(self, doc, file_path=None):
         all_nodes = doc.findall('.//node')
@@ -175,7 +208,7 @@ class Reader:
         print(f"Found {len(notes)} notes in mindmap")  # پیام انگلیسی
         return notes
 
-# ------------------ تابع کمکی برای پوشه ------------------
+
 def read_all_mm(folder_path):
     all_notes = []
     for root, dirs, files in os.walk(folder_path):
@@ -191,7 +224,7 @@ def read_all_mm(folder_path):
                 all_notes.extend(notes)
     return all_notes
 
-# ------------------ نمونه استفاده ------------------
+
 if __name__ == "__main__":
     folder_path = r"D:\FreeplaneMaps"  # مسیر پوشه فایل‌های mm
     all_notes = read_all_mm(folder_path)
