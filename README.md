@@ -1,3 +1,7 @@
+# Based on lajohnston/anki-freeplane (MIT), developed by aaa1386
+
+
+
 # Anki Freeplane Importer Plugin
 
 This is a plugin for the Anki flashcard system that allows you to convert Freeplane/Freemind .mm mindmaps into cards.

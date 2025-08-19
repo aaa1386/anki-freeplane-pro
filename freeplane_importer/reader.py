@@ -1,3 +1,4 @@
+# Based on lajohnston/anki-freeplane (MIT), developed by aaa1386
 import os
 import xml.etree.ElementTree as ET
 from .node import Node
