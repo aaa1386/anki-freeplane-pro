@@ -239,10 +239,10 @@ def importMindmapFromFolder():
 # ============================
 # Menu actions
 # ============================
-action_import_file = QAction("🔄 Import Cards from Freeplane File", mw)
+action_import_file = QAction("🔄 Sync Cards from Freeplane File", mw)
 action_import_file.triggered.connect(importMindmapFromFile)
 mw.form.menuTools.addAction(action_import_file)
 
-action_import_folder = QAction("📂 Import Cards from Folder (and Subfolders)", mw)
+action_import_folder = QAction("📂 Sync Cards from Folder (and Subfolders)", mw)
 action_import_folder.triggered.connect(importMindmapFromFolder)
 mw.form.menuTools.addAction(action_import_folder)
