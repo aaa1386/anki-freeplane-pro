@@ -107,6 +107,3 @@ Cards can be assigned to decks either automatically or manually. The main rules 
 - If no ancestor with the `anki:deckbranch` field is found → assigned to **FreeplaneDeck**  
 
 
-## 7. Sources and Original Author
-
-This plugin is based on [lajohnston/anki-freeplane (MIT)](https://github.com/lajohnston/anki-freeplane) and developed by **aaa1386**.
