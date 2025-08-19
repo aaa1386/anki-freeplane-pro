@@ -3,6 +3,7 @@ import uuid
 import os
 import urllib.parse
 
+
 class Node:
     def __init__(self, doc, element, file_path=None):
         self.doc = doc
@@ -12,6 +13,7 @@ class Node:
         self.children = False
         self._cached_node_id = None
 
+
     def to_dict(self):
         return {
             'id': self.get_node_id(),
@@ -19,6 +21,7 @@ class Node:
             'model': self.get_model(),
             'fields': self.get_fields()
         }
+
 
     def get_node_id(self):
         if self._cached_node_id is not None:
@@ -31,8 +34,10 @@ class Node:
         self._cached_node_id = node_id
         return node_id
 
+
     def get_model(self):
         return self.get_attribute('anki:model') or 'Freeplane basic'
+
 
     def get_final_deck(self):
         # 1. بررسی deckbranch خود نود
@@ -42,12 +47,14 @@ class Node:
             if deckbranch:
                 return deckbranch
 
+
         # 2. بررسی deck خود نود
         deck = self.get_attribute('anki:deck')
         if deck and deck.strip():
             return deck.strip()
 
-        # 3. بررسی اجداد فقط برای deckbranch
+
+        # 3. بررسی اجداد فقط برای deckbranch با مقدار
         current = self.element
         while True:
             parent = self.__get_parent_node(current)
@@ -58,9 +65,8 @@ class Node:
                 val = parent_deckbranch.get('VALUE')
                 if val and val.strip():
                     return val.strip()
-                else:
-                    return 'FreeplaneDeck'
             current = parent
+
 
     def __get_parent_node(self, element):
         current_id = element.get('ID')
@@ -70,11 +76,13 @@ class Node:
                     return node
         return None
 
+
     def should_create_card(self):
         return any(
             self.element.find(f'attribute[@NAME="{name}"]') is not None
             for name in ['anki:model', 'anki:deck', 'anki:deckbranch']
         )
+
 
     def get_fields(self, fields=None):
         if fields is None:
@@ -86,6 +94,7 @@ class Node:
                 fields['Back'] = outline
             self.fields = {k: (v or '') for k, v in fields.items()}
         return self.fields
+
 
     def __parse_fields(self, fields):
         attributes = self.element.findall('attribute')
@@ -103,10 +112,11 @@ class Node:
         fields['Path'] = self.__build_custom_path_link(node_id)
         return fields
 
+
     def __build_custom_path_link(self, node_id):
         if not self.file_path:
             return ''
-        abs_path = os.path.abspath(self.file_path).replace("\\", "/")
+        abs_path = os.path.abspath(self.file_path).replace("\\\\", "/")
         encoded_path = urllib.parse.quote(abs_path)
         anchor = 'ID_' + node_id
         path_nodes = []
@@ -148,6 +158,7 @@ class Node:
         full_path_link = f'<a href="freeplane:/%20/{encoded_path}#{anchor}" style="text-decoration:none; color:#007acc;">{path_text}</a>'
         return full_path_link
 
+
     def __build_outline_recursive(self, children, depth=0):
         if not children or depth >= 3:
             return ''
@@ -166,16 +177,19 @@ class Node:
         html += '</ul>'
         return html
 
+
     def get_attribute(self, name):
         attr = self.element.find(f'attribute[@NAME="{name}"]')
         if attr is not None:
             return attr.get('VALUE') or ''
         return ''
 
+
     def get_children(self):
         if self.children is False:
             self.children = [Node(self.doc, e, self.file_path) for e in self.element.findall('node')]
         return self.children
+
 
     def get_text(self):
         return self.element.get('TEXT') or ''
