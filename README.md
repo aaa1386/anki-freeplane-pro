@@ -20,9 +20,26 @@ This plugin is developed based on [lajohnston/anki-freeplane (MIT)](https://gith
 3. **Excluding Paths from Deletion**
    - Using **Manage Excluded Paths**, you can mark files or folders to prevent their cards from being deleted in Anki.
 
-4. **Displaying Ancestor Path and Node Navigation**
-   - The ancestor path of nodes in Freeplane can be viewed.
-   - You can click on any node to navigate directly to that node in Freeplane for easier tracking of decks and node relationships.
+حتماً ✅ این متن انگلیسیِ جدا برای هر کدوم:
+
+ 4. ** Ancestor Path Display**
+
+   * The ancestor path of each node in Freeplane can be viewed.
+   * This helps users clearly see the node’s exact position in the hierarchy and better understand relationships between nodes.
+
+
+
+5. ** Navigate to Node**
+
+   * Users can click on a node or any part of its ancestor path.
+   * This action takes them directly to the corresponding node in Freeplane.
+
+
+6. Back Card Outliner (Up to Three Levels)
+   •	The back side of a card can display child nodes in an outliner format.
+   •	The outline view is limited to three levels of depth to keep the content clear and avoid infinite recursion.
+   •	This helps users review hierarchical information in a structured way directly on the card.
+
 
 ---
 
