@@ -14,27 +14,30 @@ This plugin is developed based on [lajohnston/anki-freeplane (MIT)](https://gith
    - The **Manage Excluded Paths** option allows you to exclude certain files or paths from being deleted in Anki.
 
 2. **Support for Files and Folders**
-   - **Import Cards from Freeplane** → import a single `.mm` file  
-   - **Import Cards from Folder** → import all `.mm` files in a folder and its subfolders
+   - **Sync Cards from Freeplane** → import a single `.mm` file  
+   - **Sync Cards from Folder** → import all `.mm` files in a folder and its subfolders
 
 3. **Excluding Paths from Deletion**
    - Using **Manage Excluded Paths**, you can mark files or folders to prevent their cards from being deleted in Anki.
-
-
-4. ** Ancestor Path Display**
+Using Manage Excluded Paths, you can mark files or folders so that their corresponding cards in Anki will never be deleted.
+Benefit:
+Sometimes you may want to use an .mm file solely as a tool for creating cards. In this case, if you add the file to the excluded list:
+Even if the cards or nodes are later removed from the .mm file, the corresponding cards in Anki will remain and will not be deleted.
+In this way, such files serve as a source for generating cards. If your goal is only to create cards in Anki (and not to synchronize Freeplane cards in Anki, which includes adding and deleting extra cards), excluding the file is exactly what you need.
+4. **Ancestor Path Display**
 
    * The ancestor path of each node in Freeplane can be viewed.
    * This helps users clearly see the node’s exact position in the hierarchy and better understand relationships between nodes.
 
 
 
-5. ** Navigate to Node **
+5. **Navigate to Node**
 
    * Users can click on a node or any part of its ancestor path.
    * This action takes them directly to the corresponding node in Freeplane.
 
 
-6. **Back Card Outliner (Up to Three Levels) **
+6. **Back Card Outliner (Up to Three Levels)**
    •	The back side of a card can display child nodes in an outliner format.
    •	The outline view is limited to three levels of depth to keep the content clear and avoid infinite recursion.
    •	This helps users review hierarchical information in a structured way directly on the card.
