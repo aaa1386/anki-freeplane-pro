@@ -40,21 +40,16 @@ class Node:
 
 
     def get_final_deck(self):
-        # 1. بررسی deckbranch خود نود
         deckbranch = self.get_attribute('anki:deckbranch')
         if deckbranch is not None:
             deckbranch = deckbranch.strip()
             if deckbranch:
                 return deckbranch
 
-
-        # 2. بررسی deck خود نود
         deck = self.get_attribute('anki:deck')
         if deck and deck.strip():
             return deck.strip()
 
-
-        # 3. بررسی اجداد فقط برای deckbranch با مقدار
         current = self.element
         while True:
             parent = self.__get_parent_node(current)
@@ -90,7 +85,8 @@ class Node:
         if self.fields is False:
             fields = self.__parse_fields(fields)
             if 'Back' not in fields or not fields['Back']:
-                outline = self.__build_outline_recursive(self.get_children(), depth=0)
+                max_layers = self.get_max_layers()
+                outline = self.__build_outline_recursive(self.get_children(), depth=0, max_depth=max_layers)
                 fields['Back'] = outline
             self.fields = {k: (v or '') for k, v in fields.items()}
         return self.fields
@@ -159,8 +155,8 @@ class Node:
         return full_path_link
 
 
-    def __build_outline_recursive(self, children, depth=0):
-        if not children or depth >= 3:
+    def __build_outline_recursive(self, children, depth=0, max_depth=3):
+        if not children or depth >= max_depth:
             return ''
         bullet_styles = ['square', 'disc', 'circle']
         bullet = bullet_styles[depth % len(bullet_styles)]
@@ -169,7 +165,7 @@ class Node:
             if child.should_create_card() and depth > 0:
                 continue
             text = child.get_text() or ''
-            sub_outline = child.__build_outline_recursive(child.get_children(), depth + 1)
+            sub_outline = child.__build_outline_recursive(child.get_children(), depth + 1, max_depth)
             html += f'<li>{text}'
             if sub_outline:
                 html += sub_outline
@@ -184,6 +180,16 @@ class Node:
             return attr.get('VALUE') or ''
         return ''
 
+
+    def get_max_layers(self):
+        val = self.get_attribute('back_layers')  # نام attribute جدید
+        try:
+            layers = int(val)
+            if layers > 0:
+                return layers
+        except (ValueError, TypeError):
+            pass
+        return 3  # مقدار پیش‌فرض
 
     def get_children(self):
         if self.children is False:
