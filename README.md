@@ -1,53 +1,117 @@
-# Anki Freeplane Importer Plugin
+# Anki-Freeplane Pro
 
-This is a plugin for the Anki flashcard system that allows you to convert Freeplane/Freemind .mm mindmaps into cards.
-
-The plugin is currently a work in progress. The backend is working with unit tests, but does not yet have a user interface.
-
-## Installation and example
-
-This is just a proof-of-concept so far and only imports the mindmap found in the example directory. You can change this to point to a mindmap of your choice by editing the [mindmap.py](mindmap.py) file.
-
-1. Copy this repository into the add-on directory (in Anki, click Tools > Add-ons > View files)
-2. Restart Anki. You should now see 'Import mindmap' in the tools menu
-
-# Freeplane Importer for Anki
-
-This add-on allows you to import Freeplane mind maps directly into Anki.  
-Each node in the mind map can be converted into a flashcard, with support 
-for fields, attributes, and hierarchical card backs (up to 3 levels).
+Anki-Freeplane Pro یک افزونه برای سیستم کارت‌های آنکی است که امکان تبدیل نقشه‌های ذهنی Freeplane/Freemind (.mm) به کارت‌های آنکی را فراهم می‌کند.  
+این افزونه بر اساس [lajohnston/anki-freeplane (MIT)](https://github.com/lajohnston/anki-freeplane) توسعه داده شده توسط **aaa1386**.
 
 ---
 
-## Usage
+## ۱. قابلیت‌های افزونه
 
-1. Open Anki and go to:  
-   **Tools → Import Cards from Freeplane**  
-2. Select either:
-   - A single Freeplane `.mm` file  
-   - Or a folder (all `.mm` files inside, including subfolders, will be imported)  
-3. Cards will be generated automatically.
+1. **Sync کردن کارت‌ها**
+   - افزونه کارت‌ها را با Freeplane سینک می‌کند.
+   - اگر کارتی در Freeplane حذف شود، در آنکی نیز حذف خواهد شد.
+   - کارت‌ها هنگام سینک هم ساخته و هم به‌روزرسانی می‌شوند.
+   - گزینه **Manage Excluded Paths** به شما امکان می‌دهد برخی فایل‌ها یا مسیرها را استثنا کنید تا حذف کارت‌ها از آن‌ها در آنکی صورت نگیرد.
 
----
+2. **پشتیبانی از فایل و پوشه**
+   - **Import Cards from Freeplane** → وارد کردن یک فایل `.mm` واحد  
+   - **Import Cards from Folder** → وارد کردن تمام فایل‌های `.mm` موجود در یک پوشه و زیرپوشه‌ها
 
-## Card Creation Rule
+3. **استثنا کردن مسیرها از حذف شدن**
+   - با استفاده از **Manage Excluded Paths** می‌توانید برخی مسیرها یا فایل‌ها را استثنا کنید تا کارت‌ها از آن‌ها حذف نشوند.
 
-A node will **only** be converted into a card if it contains **at least one** of these fields:
-
-- `anki:deck`  
-- `anki:model`  
-
-
-
- 
+4. **نمایش مسیر سلسله اجداد و پیگیری گره‌ها**
+   - مسیر سلسله اجداد گره‌ها در Freeplane قابل مشاهده است.
+   - امکان کلیک روی هر گره و رفتن مستقیم به آن گره در Freeplane برای پیگیری راحت‌تر دسته‌ها و رابطه گره‌ها.
 
 ---
 
-## Notes
+## ۲. شرط ساخت کارت در Freeplane
 
-- Only nodes with the required fields are imported as cards.  
-- Card backs are generated up to **3 nested levels** to prevent recursion.  
+یک گره فقط زمانی کارت می‌شود که حداقل یکی از این سه فیلد را داشته باشد، حتی اگر مقدار نداشته باشند:
+
+- `anki:deckbranch`
+- `anki:deck`
+- `anki:model`
+
+اگر هیچکدام وجود نداشته باشد، کارت ساخته نمی‌شود.  
+اگر برخی فیلدها موجود نباشند یا مقدار نداشته باشند، مشکلی ایجاد نمی‌شود، ولی برای ساخت کارت حداقل یکی از آن‌ها لازم است.  
+افزونه فرزندان آن گره را به عنوان پشت کارت آنکی در نظر می‌گیرد تا سه سطح عمق.
+
+### نحوه ساخت فیلدها
+
+- از طریق Attributes (ویژگی‌ها) در Freeplane می‌توانید این فیلدها را به گره‌ها اضافه کنید:
+  1. روی گره راست‌کلیک کنید → **Add Attribute**
+  2. نام فیلد را وارد کنید (`anki:deckbranch`، `anki:deck` یا `anki:model`)
+  3. در صورت تمایل، مقدار دلخواه برای دسته یا مدل کارت وارد کنید.
 
 ---
 
+## ۳. استفاده از افزونه (Sync کردن کارت‌ها)
 
+- افزونه امکان سینک کردن کارت‌ها را فراهم می‌کند.
+- اگر کارتی در Freeplane حذف شود و هنوز در آنکی موجود باشد، در مرحله بعد حذف خواهد شد.
+- گزینه **Manage Excluded Paths** به شما امکان می‌دهد برخی فایل‌ها یا مسیرها را استثنا کنید تا حذف کارت‌ها از آن‌ها در آنکی صورت نگیرد.
+
+### نحوه استفاده
+
+1. در آنکی به مسیر **Tools** بروید و گزینه‌های مربوط به افزونه را مشاهده کنید.
+2. انتخاب کنید یکی از گزینه‌ها:
+   - **Import Cards from Freeplane** → وارد کردن یک فایل `.mm` واحد
+   - **Import Cards from Folder** → وارد کردن تمام فایل‌های `.mm` موجود در یک پوشه و زیرپوشه‌ها
+3. کارت‌ها به صورت خودکار ساخته یا به‌روزرسانی می‌شوند (Sync می‌شوند).
+
+---
+
+## ۴. پوشه Auxiliary Files
+
+- پوشه **Auxiliary files** شامل فایل‌های کمک کننده است:
+  - `note type.apkg` → مدل کارت را با وارد کردن این فایل در آنکی ایجاد کنید
+    - توضیح مهم: این مدل کارت بر اساس **Basic** است و برای عملکرد صحیح افزونه کاملاً ضروری است.
+    - نام قالب کارت را نباید دستکاری کرد، اما برخی خصوصیات آن را می‌توانید تنظیم یا تغییر دهید.
+  - `ExampleMindmap.mm` → نمونه نقشه ذهنی برای تست افزونه
+
+---
+
+## ۵. منوی Tools در آنکی
+
+فعلاً سه گزینه وجود دارد:
+
+1. **Import Cards from Freeplane**
+   - وارد کردن یک فایل `.mm` واحد
+
+2. **Import Cards from Folder**
+   - وارد کردن تمام فایل‌های `.mm` موجود در یک پوشه و زیرپوشه‌ها
+
+3. **Manage Excluded Paths**
+   - مدیریت مسیرهایی که نمی‌خواهید کارت از آن‌ها ساخته شود
+
+---
+
+## ۶. تعیین دسته کارت (deck)
+
+قبل از جزئیات: اگر فیلدهای دسته در خود گره یا اجداد وجود نداشته باشد، کارت به دسته پیش‌فرض **FreeplaneDeck** منتقل می‌شود.
+
+کارت‌ها می‌توانند به صورت خودکار یا دستی به دسته‌ها اختصاص یابند. روش‌های اصلی:
+
+1. استفاده از `anki:deckbranch` در خود گره:
+   - اگر مقدار داشته باشد → همان مقدار به عنوان نام دسته استفاده می‌شود
+   - اگر مقدار نداشته باشد → کارت به دسته پیش‌فرض **FreeplaneDeck**
+
+2. استفاده از `anki:deck` در خود گره:
+   - اگر موجود باشد و مقدار داشته باشد → همان مقدار استفاده می‌شود
+
+3. بررسی اجداد گره (در صورتی که `anki:deck` یا `anki:deckbranch` در خود گره نباشد یا مقدار نداشته باشد):
+   - اگر به یک جد رسیدیم که `anki:deckbranch` دارد:
+     - مقدار دارد → همان مقدار استفاده شود
+     - مقدار ندارد → کارت به دسته پیش‌فرض **FreeplaneDeck**
+   - اگر به یک جد رسیدیم که فقط `anki:deck` دارد → نادیده گرفته می‌شود و بررسی ادامه می‌یابد
+   - اگر هیچ جد با `anki:deckbranch` پیدا نشد → کارت به دسته پیش‌فرض **FreeplaneDeck**
+
+در نهایت، اگر به ریشه رسیدیم و هیچ `anki:deckbranch` پیدا نشد، کارت به **FreeplaneDeck** منتقل می‌شود.
+
+---
+
+## ۷. منابع و سازنده اولیه
+
+این افزونه بر اساس [lajohnston/anki-freeplane (MIT)](https://github.com/lajohnston/anki-freeplane) توسعه داده شده توسط **aaa1386**
