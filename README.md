@@ -104,22 +104,17 @@ Currently, there are three options:
 
 ---
 
-## 6.##  Card Deck Assignment Rules  
+## 6.  Card Deck Assignment Rules  
 
-Cards can be assigned to decks either automatically or manually. The main rules are as follows:  
+1.	If the current node has either the anki:deckbranch or anki:deck field with a non-empty value, that value is used as the card's deck name.
+2.	If these fields exist but are empty, or they are absent in the current node (for example, only anki:model is present), the system checks ancestor nodes starting from the closest parent up to the furthest.
+3.	When checking ancestors, only nodes that have a non-empty anki:deckbranch field are considered. The first valid value found is assigned as the card’s deck.
+4.	If no valid value is found in the current node or its ancestors, the default deck named FreeplaneDeck is assigned to the card.
 
-### 1. Using the `anki:deckbranch` attribute in the node:  
-- If it has a value → it will be used as the deck name  
-- If it is empty → the card will automatically be placed in the default **FreeplaneDeck**  
+Benefit of This Logic:
+This logic allows users to define a default deck for a whole subtree by setting a anki:deckbranch field on a parent node (such as the root node). For example, you can add anki:deckbranch with the value "Mathematics" to the root node of your mind map. Then, any cards under this root without an explicitly assigned deck will automatically inherit the "Mathematics" deck.
+This feature helps organize cards better, prevents scattering cards into multiple default decks, and simplifies managing large and complex mind maps.
 
-### 2. Using `anki:deck` in the node:  
-- If the field exists and has a value → its value will be used as the deck name  
-- If the field has no value → ancestors will be checked:  
 
-**Checking the node's ancestors**  
-- If an ancestor has the `anki:deckbranch` field:  
-  - If a value is set → its value will be used for the deck name  
-  - If the value is empty → it will be assigned to **FreeplaneDeck**  
-- If no ancestor with the `anki:deckbranch` field is found → assigned to **FreeplaneDeck**  
 
 
