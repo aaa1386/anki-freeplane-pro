@@ -61,7 +61,9 @@ Template name must stay the same, but some properties can be customized.
 A node becomes a card only if it has at least one of these fields (even if empty):
 
 • `anki:deckbranch`
+
 • `anki:deck`
+
 • `anki:model`
 
 If none of these exist → the node is not converted into a card.
@@ -83,12 +85,15 @@ Child nodes of a card node are used as the back of the card (up to 3 levels).
 **Benefit:**
 
 • Define a default deck for a whole subtree (e.g., `anki:deckbranch = Mathematics` on the root).
+
 • Child cards inherit that deck unless explicitly overridden.
+
 • Helps keep cards organized and prevents scattering.
 
 ## 🔧 Card Syncing & Management
 
 • Cards are synced between Freeplane and Anki.
+
 • If a node is deleted in Freeplane → its card is removed in Anki (unless excluded).
 
 ### Excluding Paths from Deletion
@@ -98,7 +103,9 @@ Using Manage Excluded Paths, you can mark files or folders so that their corresp
 **Benefit:**
 
 • You can dedicate an `.mm` file solely as a card generator.
+
 • Cards will be created from that file.
+
 • Even if nodes/cards are removed from the `.mm` file later, the cards in Anki will remain.
 
 ## 📦 Auxiliary Files & Tools
@@ -110,7 +117,8 @@ Using Manage Excluded Paths, you can mark files or folders so that their corresp
 ### Tools Menu in Anki
 
 • Import Cards from Freeplane → import a single `.mm` file.
+
 • Import Cards from Folder → import all `.mm` files in a folder (recursive).
+
 • Manage Excluded Paths → manage paths to exclude from card deletion.
 
-می‌خوای این کار را انجام دهم؟
