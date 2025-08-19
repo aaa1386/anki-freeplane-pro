@@ -88,29 +88,24 @@ Currently, there are three options:
 
 ---
 
-## 6. Deck Assignment
+## 6.##  Card Deck Assignment Rules  
 
-If deck fields are missing in a node or its ancestors, the card will be assigned to the default deck **FreeplaneDeck**.
+Cards can be assigned to decks either automatically or manually. The main rules are as follows:  
 
-Cards can be assigned to decks automatically or manually. Main rules:
+### 1. Using the `anki:deckbranch` attribute in the node:  
+- If it has a value → it will be used as the deck name  
+- If it is empty → the card will automatically be placed in the default **FreeplaneDeck**  
 
-1. Using `anki:deckbranch` in the node:
-   - If it has a value → use it as the deck name
-   - If empty → assign to default **FreeplaneDeck**
+### 2. Using `anki:deck` in the node:  
+- If the field exists and has a value → its value will be used as the deck name  
+- If the field has no value → ancestors will be checked:  
 
-2. Using `anki:deck` in the node:
-   - If present and has a value → use it
+**Checking the node's ancestors**  
+- If an ancestor has the `anki:deckbranch` field:  
+  - If a value is set → its value will be used for the deck name  
+  - If the value is empty → it will be assigned to **FreeplaneDeck**  
+- If no ancestor with the `anki:deckbranch` field is found → assigned to **FreeplaneDeck**  
 
-3. Checking node ancestors (if neither `anki:deck` nor `anki:deckbranch` exist or have values):
-   - If an ancestor has `anki:deckbranch`:
-     - With value → use it
-     - Empty → assign to **FreeplaneDeck**
-   - If an ancestor has only `anki:deck` → ignored and continue checking
-   - If no ancestor has `anki:deckbranch` → assign to **FreeplaneDeck**
-
-Finally, if the root is reached and no `anki:deckbranch` is found, the card is assigned to **FreeplaneDeck**.
-
----
 
 ## 7. Sources and Original Author
 
