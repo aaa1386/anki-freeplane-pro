@@ -1,3 +1,4 @@
+anki-freeplane pro    (Convert Freeplane mind maps into Anki flashcards)
 # Anki Freeplane Importer Plugin
 
 This is a plugin for the Anki flashcard system that allows you to convert Freeplane/Freemind .mm mindmaps into cards.
