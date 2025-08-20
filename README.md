@@ -23,9 +23,17 @@ This plugin is developed based on [lajohnston/anki-freeplane (MIT)](https://gith
 4. **Navigate to Node**
    Click a node or its ancestor path in Anki to jump directly to the corresponding node in Freeplane.
 
-5. **Back Card Outliner (up to 3 Levels)**
-   The back of cards can display child nodes in an outline format.
-   Outline depth limited to 3 levels → avoids infinite recursion.
+5. **Back Card Outliner (Configurable Levels)**
+The back of cards can display child nodes in an outline format.
+
+By default, outline depth is limited to 3 levels (to avoid infinite recursion).
+
+Users can override this limit by adding an attribute back_layers to a node.
+
+Example: back_layers = 5 → the outline will expand up to 5 child levels.
+
+If back_layers is missing or invalid → default 3 levels will be used.
+
 
 ## 💻 Installation / How to Install
 
