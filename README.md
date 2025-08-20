@@ -28,11 +28,11 @@ The back of cards can display child nodes in an outline format.
 
 By default, outline depth is limited to 3 levels (to avoid infinite recursion).
 
-Users can override this limit by adding an attribute back_layers to a node.
+Users can override this limit by adding an attribute back_levels to a node.
 
-Example: back_layers = 5 → the outline will expand up to 5 child levels.
+Example: back_levels = 5 → the outline will expand up to 5 child levels.
 
-If back_layers is missing or invalid → default 3 levels will be used.
+If back_levels is missing or invalid → default 3 levels will be used.
 
 
 ## 💻 Installation / How to Install
