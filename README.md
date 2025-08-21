@@ -130,3 +130,10 @@ Using Manage Excluded Paths, you can mark files or folders so that their corresp
 
 • Manage Excluded Paths → manage paths to exclude from card deletion.
 
+
+🔔 Important Note:
+A new script to help create Anki cards has been developed, which is very useful. To use it, you need to install this script in Freeplane:
+Template for Anki Cards
+
+💾 Save/Install the Script:
+You can save it in your user scripts folder to make it permanently available. After saving, restart Freeplane.
