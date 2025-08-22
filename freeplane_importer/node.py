@@ -185,7 +185,7 @@ class Node:
         val = self.get_attribute('back_levels')  # نام attribute جدید
         try:
             layers = int(val)
-            if layers > 0:
+            if layers >= 0:
                 return layers
         except (ValueError, TypeError):
             pass
