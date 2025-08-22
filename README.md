@@ -5,6 +5,7 @@
 Anki-Freeplane Pro is a plugin for the **Anki flashcard system** that converts **Freeplane/Freemind (.mm) mind maps** into Anki cards.
 This plugin is developed based on [lajohnston/anki-freeplane (MIT)](https://github.com/lajohnston/anki-freeplane) by **aaa1386**.
 
+
 ## ✨ Features
 
 1. **Card Syncing**
