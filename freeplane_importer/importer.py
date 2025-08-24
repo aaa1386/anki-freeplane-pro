@@ -1,3 +1,4 @@
+# Based on lajohnston/anki-freeplane (MIT), developed by aaa1386
 import os
 
 class Importer:
