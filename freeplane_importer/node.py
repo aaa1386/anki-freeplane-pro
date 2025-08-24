@@ -46,9 +46,11 @@ class Node:
             if deckbranch:
                 return deckbranch
 
+
         deck = self.get_attribute('anki:deck')
         if deck and deck.strip():
             return deck.strip()
+
 
         current = self.element
         while True:
@@ -88,6 +90,8 @@ class Node:
                 max_layers = self.get_max_layers()
                 outline = self.__build_outline_recursive(self.get_children(), depth=0, max_depth=max_layers)
                 fields['Back'] = outline
+            # Add URL field with Freeplane URL format
+            fields['URL'] = self.__build_freeplane_url()
             self.fields = {k: (v or '') for k, v in fields.items()}
         return self.fields
 
@@ -106,7 +110,20 @@ class Node:
                 fields[field_name] = value
         fields['Front'] = node_text
         fields['Path'] = self.__build_custom_path_link(node_id)
+        # Add URL field with Freeplane URL format here as well
+        fields['URL'] = self.__build_freeplane_url()
         return fields
+
+
+    def __build_freeplane_url(self):
+        if not self.file_path:
+            return ''
+        abs_path = os.path.abspath(self.file_path).replace("\\", "/")
+        encoded_path = urllib.parse.quote(abs_path)
+        node_id = self.get_node_id()
+        anchor = 'ID_' + node_id
+        url = f'freeplane:/%20/{encoded_path}#{anchor}'
+        return url
 
 
     def __build_custom_path_link(self, node_id):
@@ -190,6 +207,7 @@ class Node:
         except (ValueError, TypeError):
             pass
         return 3  # مقدار پیش‌فرض
+
 
     def get_children(self):
         if self.children is False:

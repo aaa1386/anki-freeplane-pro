@@ -1,12 +1,11 @@
-from .model_not_found_exception import ModelNotFoundException
 import os
-
 
 class Importer:
     def __init__(self, collection):
         self.collection = collection
         self.model = False
         self.model_fields = []
+        self.card_urls = []  # لیست ذخیره URL کارت‌ها
 
     def import_note(self, import_data):
         try:
@@ -29,6 +28,12 @@ class Importer:
                         card.flush()
 
             note.flush()
+
+            # استخراج URL کارت و اضافه به لیست در صورتی که موجود باشد
+            url = import_data['fields'].get('URL', '')
+            if url:
+                self.card_urls.append(url)
+
             return True
 
         except Exception as e:
@@ -74,7 +79,6 @@ class Importer:
         id_field = self.__get_model_id_field()
         pfile_field = self.__get_model_pfile_field()
 
-        # نرمال‌سازی مسیر PFile برای تطابق دقیق‌تر
         pfile_norm = os.path.normcase(os.path.normpath(pfile)).strip() if pfile else ''
 
         note_ids = self.collection.findNotes(f"mid:{self.model['id']}")
