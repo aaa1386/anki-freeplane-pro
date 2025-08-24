@@ -1,9 +1,11 @@
 # Based on lajohnston/anki-freeplane (MIT), developed by aaa1386
 import os
+import json
 import xml.etree.ElementTree as ET
 from aqt import mw
 from aqt.utils import showInfo
 from aqt.qt import QAction, QFileDialog, QDialog, QVBoxLayout, QListWidget, QPushButton, QMessageBox
+import traceback
 
 from .freeplane_importer.model_not_found_exception import ModelNotFoundException
 from .freeplane_importer.reader import Reader
@@ -171,6 +173,8 @@ def remove_old_notes(mindmap_files: dict):
 # ============================
 # Import functions
 # ============================
+
+
 def importMindmapFromFile():
     file_path, _ = QFileDialog.getOpenFileName(caption="Select a .mm file", filter="Freeplane mindmap files (*.mm)")
     if not file_path:
@@ -184,17 +188,43 @@ def importMindmapFromFile():
     importer = Importer(mw.col)
     reader = Reader()
     total_imported = 0
+    card_urls = []
+
     try:
         notes = reader.get_notes(ET.parse(file_path), file_path)
         for note in notes:
             note["PFile"] = file_path
             try:
                 importer.import_note(note)
+                url = note['fields'].get('URL', '')
+                if url:
+                    card_urls.append(url)
             except ModelNotFoundException as e:
                 showInfo(f"Model not found: {e.model_name}")
         total_imported += len(notes)
     except Exception as e:
         showInfo(f"Error importing notes from file {file_path}:\n{e}")
+
+    json_path = "D:/anki_freeplane_cards.json"
+
+    try:
+        if os.path.exists(json_path):
+            with open(json_path, 'r', encoding='utf-8') as f:
+                old_urls = json.load(f)
+        else:
+            old_urls = []
+    except Exception as e:
+        showInfo(f"Error reading existing URLs: {e}\n{traceback.format_exc()}")
+        old_urls = []
+
+    all_urls = list(set(old_urls + card_urls))
+
+    try:
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(all_urls, f, ensure_ascii=False, indent=4)
+        showInfo(f"Saved {len(card_urls)} new URLs, total {len(all_urls)} URLs to {json_path}")
+    except Exception as e:
+        showInfo(f"Error saving URLs to file: {e}\n{traceback.format_exc()}")
 
     mw.reset()
     showInfo(f"{total_imported} notes imported from file.")
@@ -221,6 +251,8 @@ def importMindmapFromFolder():
     importer = Importer(mw.col)
     reader = Reader()
     total_imported = 0
+    card_urls = []
+
     for file_path in mm_files:
         try:
             notes = reader.get_notes(ET.parse(file_path), file_path)
@@ -228,18 +260,41 @@ def importMindmapFromFolder():
                 note["PFile"] = file_path
                 try:
                     importer.import_note(note)
+                    url = note['fields'].get('URL', '')
+                    if url:
+                        card_urls.append(url)
                 except ModelNotFoundException as e:
                     showInfo(f"Model not found: {e.model_name}")
             total_imported += len(notes)
         except Exception as e:
             showInfo(f"Error in file {file_path}:\n{e}")
 
+    json_path = "D:/anki_freeplane_cards.json"
+
+    try:
+        if os.path.exists(json_path):
+            with open(json_path, 'r', encoding='utf-8') as f:
+                old_urls = json.load(f)
+        else:
+            old_urls = []
+    except Exception as e:
+        showInfo(f"Error reading existing URLs: {e}\n{traceback.format_exc()}")
+        old_urls = []
+
+    all_urls = list(set(old_urls + card_urls))
+
+    try:
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(all_urls, f, ensure_ascii=False, indent=4)
+        showInfo(f"Saved {len(card_urls)} new URLs, total {len(all_urls)} URLs to {json_path}")
+    except Exception as e:
+        showInfo(f"Error saving URLs to file: {e}\n{traceback.format_exc()}")
+
     mw.reset()
     showInfo(f"{total_imported} notes imported from {len(mm_files)} files.")
 
-# ============================
-# Menu actions
-# ============================
+# مابقی کد و منوها بدون تغییر
+
 action_import_file = QAction("🔄 Sync Cards from Freeplane File", mw)
 action_import_file.triggered.connect(importMindmapFromFile)
 mw.form.menuTools.addAction(action_import_file)
