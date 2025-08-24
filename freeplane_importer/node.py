@@ -182,7 +182,7 @@ class Node:
 
 
     def get_max_layers(self):
-        val = self.get_attribute('back_levels')  # نام attribute جدید
+        val = self.get_attribute('BackLevels')  # نام attribute جدید
         try:
             layers = int(val)
             if layers >= 0:
