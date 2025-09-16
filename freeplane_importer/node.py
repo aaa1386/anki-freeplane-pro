@@ -3,7 +3,6 @@ import uuid
 import os
 import urllib.parse
 
-
 class Node:
     def __init__(self, doc, element, file_path=None):
         self.doc = doc
@@ -13,7 +12,6 @@ class Node:
         self.children = False
         self._cached_node_id = None
 
-
     def to_dict(self):
         return {
             'id': self.get_node_id(),
@@ -21,7 +19,6 @@ class Node:
             'model': self.get_model(),
             'fields': self.get_fields()
         }
-
 
     def get_node_id(self):
         if self._cached_node_id is not None:
@@ -34,24 +31,16 @@ class Node:
         self._cached_node_id = node_id
         return node_id
 
-
     def get_model(self):
         return self.get_attribute('anki:model') or 'Freeplane basic'
 
-
     def get_final_deck(self):
         deckbranch = self.get_attribute('anki:deckbranch')
-        if deckbranch is not None:
-            deckbranch = deckbranch.strip()
-            if deckbranch:
-                return deckbranch
-
-
+        if deckbranch and deckbranch.strip():
+            return deckbranch.strip()
         deck = self.get_attribute('anki:deck')
         if deck and deck.strip():
             return deck.strip()
-
-
         current = self.element
         while True:
             parent = self.__get_parent_node(current)
@@ -64,7 +53,6 @@ class Node:
                     return val.strip()
             current = parent
 
-
     def __get_parent_node(self, element):
         current_id = element.get('ID')
         for node in self.doc.findall('.//node'):
@@ -73,13 +61,11 @@ class Node:
                     return node
         return None
 
-
     def should_create_card(self):
         return any(
             self.element.find(f'attribute[@NAME="{name}"]') is not None
             for name in ['anki:model', 'anki:deck', 'anki:deckbranch']
         )
-
 
     def get_fields(self, fields=None):
         if fields is None:
@@ -90,11 +76,9 @@ class Node:
                 max_layers = self.get_max_layers()
                 outline = self.__build_outline_recursive(self.get_children(), depth=0, max_depth=max_layers)
                 fields['Back'] = outline
-            # Add URL field with Freeplane URL format
             fields['URL'] = self.__build_freeplane_url()
             self.fields = {k: (v or '') for k, v in fields.items()}
         return self.fields
-
 
     def __parse_fields(self, fields):
         attributes = self.element.findall('attribute')
@@ -109,11 +93,9 @@ class Node:
                     value = node_text
                 fields[field_name] = value
         fields['Front'] = node_text
-        fields['Path'] = self.__build_custom_path_link(node_id)
-        # Add URL field with Freeplane URL format here as well
+        fields['Ancestors'] = self.__build_custom_path_link(node_id)  # تغییر نام فیلد از Path به Ancestors
         fields['URL'] = self.__build_freeplane_url()
         return fields
-
 
     def __build_freeplane_url(self):
         if not self.file_path:
@@ -122,9 +104,7 @@ class Node:
         encoded_path = urllib.parse.quote(abs_path)
         node_id = self.get_node_id()
         anchor = 'ID_' + node_id
-        url = f'freeplane:/%20/{encoded_path}#{anchor}'
-        return url
-
+        return f'freeplane:/%20/{encoded_path}#{anchor}'
 
     def __build_custom_path_link(self, node_id):
         if not self.file_path:
@@ -168,9 +148,7 @@ class Node:
             path_text = " ← ".join(rtl_nodes[:-1]) + " ←"
         else:
             path_text = "←"
-        full_path_link = f'<a href="freeplane:/%20/{encoded_path}#{anchor}" style="text-decoration:none; color:#007acc;">{path_text}</a>'
-        return full_path_link
-
+        return f'<a href="freeplane:/%20/{encoded_path}#{anchor}" style="text-decoration:none; color:#007acc;">{path_text}</a>'
 
     def __build_outline_recursive(self, children, depth=0, max_depth=3):
         if not children or depth >= max_depth:
@@ -190,30 +168,24 @@ class Node:
         html += '</ul>'
         return html
 
-
     def get_attribute(self, name):
         attr = self.element.find(f'attribute[@NAME="{name}"]')
-        if attr is not None:
-            return attr.get('VALUE') or ''
-        return ''
-
+        return attr.get('VALUE') if attr is not None else ''
 
     def get_max_layers(self):
-        val = self.get_attribute('BackLevels')  # نام attribute جدید
+        val = self.get_attribute('BackLevels')
         try:
             layers = int(val)
             if layers >= 0:
                 return layers
         except (ValueError, TypeError):
             pass
-        return 3  # مقدار پیش‌فرض
-
+        return 3
 
     def get_children(self):
         if self.children is False:
             self.children = [Node(self.doc, e, self.file_path) for e in self.element.findall('node')]
         return self.children
-
 
     def get_text(self):
         return self.element.get('TEXT') or ''
