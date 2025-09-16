@@ -1,12 +1,15 @@
 # Based on lajohnston/anki-freeplane (MIT), developed by aaa1386
 import os
+from .model_not_found_exception import ModelNotFoundException
 
 class Importer:
     def __init__(self, collection):
         self.collection = collection
         self.model = False
         self.model_fields = []
-        self.card_urls = []  # لیست ذخیره URL کارت‌ها
+        self.new_notes = []
+        self.updated_notes = []
+        self.card_urls = []
 
     def import_note(self, import_data):
         try:
@@ -15,22 +18,22 @@ class Importer:
             did = self.collection.decks.id(import_data['deck'], create=True)
             self.collection.decks.select(did)
 
-            note = self.__find_or_create_note(import_data['id'], import_data['PFile'])
+            note, is_new = self.__find_or_create_note(import_data['id'], import_data['PFile'])
             self.__populate_note_fields(note, import_data['fields'], import_data['id'], import_data['PFile'])
 
-            is_new = note.id == 0
             if is_new:
                 note.model()['did'] = did
                 self.collection.addNote(note)
+                self.new_notes.append(note)
             else:
                 for card in note.cards():
                     if card.did != did:
                         card.did = did
                         card.flush()
+                self.updated_notes.append(note)
 
             note.flush()
 
-            # استخراج URL کارت و اضافه به لیست در صورتی که موجود باشد
             url = import_data['fields'].get('URL', '')
             if url:
                 self.card_urls.append(url)
@@ -52,11 +55,11 @@ class Importer:
 
     def __populate_note_fields(self, note, fields, node_id, pfile):
         id_field = self.__get_model_id_field()
-        if id_field is not None:
+        if id_field:
             note[id_field] = node_id or ''
 
         pfile_field = self.__get_model_pfile_field()
-        if pfile_field is not None:
+        if pfile_field:
             note[pfile_field] = pfile or ''
 
         for field in self.model_fields:
@@ -64,7 +67,7 @@ class Importer:
                 note[field] = fields.get(field, '') or ''
 
     def __get_model_id_field(self):
-        if len(self.model_fields) > 0 and self.model_fields[0].lower() == 'id':
+        if self.model_fields and self.model_fields[0].lower() == 'id':
             return self.model_fields[0]
         return None
 
@@ -75,11 +78,8 @@ class Importer:
         return None
 
     def __find_or_create_note(self, node_id, pfile):
-        import os
-
         id_field = self.__get_model_id_field()
         pfile_field = self.__get_model_pfile_field()
-
         pfile_norm = os.path.normcase(os.path.normpath(pfile)).strip() if pfile else ''
 
         note_ids = self.collection.findNotes(f"mid:{self.model['id']}")
@@ -96,6 +96,6 @@ class Importer:
             )
 
             if note_id_value == node_id and note_pfile_value == pfile_norm:
-                return note
+                return note, False  # کارت موجود است → آپدیت
 
-        return self.collection.newNote()
+        return self.collection.newNote(), True  # کارت جدید
