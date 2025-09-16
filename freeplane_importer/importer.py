@@ -1,39 +1,41 @@
 # Based on lajohnston/anki-freeplane (MIT), developed by aaa1386
-import os
 from .model_not_found_exception import ModelNotFoundException
+import os
+
 
 class Importer:
     def __init__(self, collection):
         self.collection = collection
-        self.model = False
+        self.model = None
         self.model_fields = []
-        self.new_notes = []
-        self.updated_notes = []
-        self.card_urls = []
+        self.card_urls = []  # لیست ذخیره URL کارت‌ها
 
     def import_note(self, import_data):
+        """
+        وارد کردن یک کارت با داده‌های import_data
+        """
         try:
             self.__load_model(import_data['model'])
 
             did = self.collection.decks.id(import_data['deck'], create=True)
             self.collection.decks.select(did)
 
-            note, is_new = self.__find_or_create_note(import_data['id'], import_data['PFile'])
+            note = self.__find_or_create_note(import_data['id'], import_data['PFile'])
             self.__populate_note_fields(note, import_data['fields'], import_data['id'], import_data['PFile'])
 
+            is_new = note.id == 0
             if is_new:
                 note.model()['did'] = did
                 self.collection.addNote(note)
-                self.new_notes.append(note)
             else:
                 for card in note.cards():
                     if card.did != did:
                         card.did = did
                         card.flush()
-                self.updated_notes.append(note)
 
             note.flush()
 
+            # استخراج URL کارت و اضافه به لیست در صورتی که موجود باشد
             url = import_data['fields'].get('URL', '')
             if url:
                 self.card_urls.append(url)
@@ -44,11 +46,13 @@ class Importer:
             print(f"Error importing note ID {import_data.get('id')} - PFile {import_data.get('PFile')}: {e}")
             return False
 
+    # ============================
+    # Model helpers
+    # ============================
     def __load_model(self, model_name):
         model = self.collection.models.byName(model_name)
         if model is None:
             raise ModelNotFoundException(model_name)
-
         self.collection.models.setCurrent(model)
         self.model = model
         self.model_fields = self.collection.models.fieldNames(self.model)
@@ -77,6 +81,9 @@ class Importer:
                 return f
         return None
 
+    # ============================
+    # Note management
+    # ============================
     def __find_or_create_note(self, node_id, pfile):
         id_field = self.__get_model_id_field()
         pfile_field = self.__get_model_pfile_field()
@@ -96,6 +103,6 @@ class Importer:
             )
 
             if note_id_value == node_id and note_pfile_value == pfile_norm:
-                return note, False  # کارت موجود است → آپدیت
+                return note
 
-        return self.collection.newNote(), True  # کارت جدید
+        return self.collection.newNote()
