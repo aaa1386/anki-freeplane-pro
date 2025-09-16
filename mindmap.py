@@ -1,4 +1,7 @@
 # Based on lajohnston/anki-freeplane (MIT), developed by aaa1386
+# mindmap.py - نسخه نهایی اصلاح‌شده
+# Based on lajohnston/anki-freeplane (MIT), developed by aaa1386
+
 import os
 import xml.etree.ElementTree as ET
 from aqt import mw
@@ -165,19 +168,11 @@ def remove_old_notes(mindmap_files: dict, single_file_mode=False):
         if any(pfile_norm == excl or pfile_norm.startswith(excl + os.sep) for excl in exclude_list):
             continue
 
-        # اگر فایل در حالت single_file_mode باشد، فقط کارت های آن فایل بررسی شوند
         if single_file_mode and pfile_norm not in normalized_files:
             continue
 
-        # اگر فایل حذف شده باشد، همه کارت های آن حذف شوند
-        if not os.path.exists(pfile_norm):
-            to_delete.append(note.id)
-            if pfile_norm in normalized_files:
-                del normalized_files[pfile_norm]
-            continue
-
-        # حذف کارت هایی که دیگر در فایل نیستند
-        if node_id_norm not in normalized_files.get(pfile_norm, set()):
+        # حذف کارت هایی که فایل حذف شده یا نود دیگر وجود ندارد
+        if not os.path.exists(pfile_norm) or node_id_norm not in normalized_files.get(pfile_norm, set()):
             to_delete.append(note.id)
 
     if to_delete:
@@ -195,27 +190,34 @@ def importMindmapFromFile():
         return
 
     mindmap_files = {file_path: get_ids_from_file(file_path)}
-    deleted = remove_old_notes(mindmap_files, single_file_mode=True)
-    if deleted:
-        showInfo(f"{deleted} old notes removed.")
+    deleted_count = remove_old_notes(mindmap_files, single_file_mode=True)
 
     importer = Importer(mw.col)
     reader = Reader()
-    total_imported = 0
+    imported_notes = []
+    updated_notes = []
+
     try:
         notes = reader.get_notes(ET.parse(file_path), file_path)
         for note in notes:
             note["PFile"] = file_path
-            try:
-                importer.import_note(note)
-            except ModelNotFoundException as e:
-                showInfo(f"Model not found: {e.model_name}")
-        total_imported += len(notes)
+            result = importer.import_note(note)
+            if result:
+                # بررسی همزمان ID و PFile
+                existing = mw.col.findNotes(f'ID:{note["id"]} PFile:"{note["PFile"].replace("\\","\\\\")}"')
+                if existing:
+                    updated_notes.append(note['id'])
+                else:
+                    imported_notes.append(note['id'])
     except Exception as e:
         showInfo(f"Error importing notes from file {file_path}:\n{e}")
 
     mw.reset()
-    showInfo(f"{total_imported} notes imported from file.")
+    showInfo(
+        f"🆕 {len(imported_notes)} notes imported\n"
+        f"🔄 {len(updated_notes)} notes updated\n"
+        f"🗑️ {deleted_count} notes deleted"
+    )
 
 def importMindmapFromFolder():
     folder = QFileDialog.getExistingDirectory(caption="Select a folder")
@@ -227,33 +229,47 @@ def importMindmapFromFolder():
         for file in files:
             if file.lower().endswith(".mm"):
                 mm_files.append(os.path.join(root, file))
+
+    # وقتی هیچ فایل وجود ندارد
     if not mm_files:
-        showInfo("No .mm files found in folder or subfolders.")
+        deleted_count = remove_old_notes({})  # حذف کارت‌های قدیمی مرتبط با این پوشه
+        mw.reset()
+        showInfo(
+            f"📂 No .mm files found in folder or subfolders.\n"
+            f"🗑️ {deleted_count} notes deleted"
+        )
         return
 
+    # وقتی فایل وجود دارد
     mindmap_files = {fp: get_ids_from_file(fp) for fp in mm_files}
-    deleted = remove_old_notes(mindmap_files)
-    if deleted:
-        showInfo(f"{deleted} old notes removed.")
+    deleted_count = remove_old_notes(mindmap_files)
 
     importer = Importer(mw.col)
     reader = Reader()
-    total_imported = 0
+    imported_notes = []
+    updated_notes = []
+
     for file_path in mm_files:
         try:
             notes = reader.get_notes(ET.parse(file_path), file_path)
             for note in notes:
                 note["PFile"] = file_path
-                try:
-                    importer.import_note(note)
-                except ModelNotFoundException as e:
-                    showInfo(f"Model not found: {e.model_name}")
-            total_imported += len(notes)
+                result = importer.import_note(note)
+                if result:
+                    existing = mw.col.findNotes(f'ID:{note["id"]} PFile:"{note["PFile"].replace("\\","\\\\")}"')
+                    if existing:
+                        updated_notes.append(note['id'])
+                    else:
+                        imported_notes.append(note['id'])
         except Exception as e:
             showInfo(f"Error in file {file_path}:\n{e}")
 
     mw.reset()
-    showInfo(f"{total_imported} notes imported from {len(mm_files)} files.")
+    showInfo(
+        f"🆕 {len(imported_notes)} notes imported\n"
+        f"🔄 {len(updated_notes)} notes updated\n"
+        f"🗑️ {deleted_count} notes deleted"
+    )
 
 # ============================
 # Menu actions
