@@ -1,10 +1,4 @@
-<<<<<<< HEAD
-# mindmap.py - نسخه نهایی اصلاح‌شده
 # Based on lajohnston/anki-freeplane (MIT), developed by aaa1386
-
-=======
-# Based on lajohnston/anki-freeplane (MIT), developed by aaa1386
->>>>>>> 3d1e6b30ee7ccd873e864d22b70788c5ca7f2045
 import os
 import xml.etree.ElementTree as ET
 from aqt import mw
