@@ -133,7 +133,7 @@ def is_excluded(pfile: str):
 # ============================
 # Remove old notes
 # ============================
-def remove_old_notes(mindmap_files: dict):
+def remove_old_notes(mindmap_files: dict, single_file_mode=False):
     model_name = "Freeplane basic"
     model = mw.col.models.byName(model_name)
     if not model:
@@ -141,30 +141,48 @@ def remove_old_notes(mindmap_files: dict):
         return 0
 
     mw.col.models.setCurrent(model)
-
     cids = mw.col.findNotes(f"mid:{model['id']}")
     notes = [mw.col.getNote(cid) for cid in cids]
 
     to_delete = []
     normalized_files = {os.path.normcase(os.path.normpath(fp)): ids for fp, ids in mindmap_files.items()}
+    exclude_list = [os.path.normcase(os.path.normpath(e)) for e in load_exclude_list()]
 
     for note in notes:
-        pfile = note["PFile"] if "PFile" in note else None
-        node_id = note["ID"] if "ID" in note else None
+        try:
+            pfile = note["PFile"]
+            node_id = note["ID"]
+        except KeyError:
+            continue
+
         if not pfile or not node_id:
             continue
+
         pfile_norm = normalize_pfile(pfile)
-        if is_excluded(pfile_norm):
+        node_id_norm = normalize_id(node_id)
+
+        if any(pfile_norm == excl or pfile_norm.startswith(excl + os.sep) for excl in exclude_list):
             continue
-        if pfile_norm not in normalized_files:
+
+        # اگر فایل در حالت single_file_mode باشد، فقط کارت های آن فایل بررسی شوند
+        if single_file_mode and pfile_norm not in normalized_files:
             continue
-        node_id = normalize_id(node_id)
-        if node_id not in normalized_files[pfile_norm]:
+
+        # اگر فایل حذف شده باشد، همه کارت های آن حذف شوند
+        if not os.path.exists(pfile_norm):
+            to_delete.append(note.id)
+            if pfile_norm in normalized_files:
+                del normalized_files[pfile_norm]
+            continue
+
+        # حذف کارت هایی که دیگر در فایل نیستند
+        if node_id_norm not in normalized_files.get(pfile_norm, set()):
             to_delete.append(note.id)
 
     if to_delete:
         mw.col.remNotes(to_delete)
         mw.reset()
+
     return len(to_delete)
 
 # ============================
@@ -176,7 +194,7 @@ def importMindmapFromFile():
         return
 
     mindmap_files = {file_path: get_ids_from_file(file_path)}
-    deleted = remove_old_notes(mindmap_files)
+    deleted = remove_old_notes(mindmap_files, single_file_mode=True)
     if deleted:
         showInfo(f"{deleted} old notes removed.")
 
