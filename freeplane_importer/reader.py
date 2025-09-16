@@ -11,11 +11,15 @@ class Reader:
         for element in all_nodes:
             node = Node(doc, element, file_path=file_path)
             if node.should_create_card():
+<<<<<<< HEAD
                 note_dict = node.to_dict()
                 # تغییر فیلد Path به Ancestors
                 if "fields" in note_dict and "Path" in note_dict["fields"]:
                     note_dict["fields"]["Ancestors"] = note_dict["fields"].pop("Path")
                 notes.append(note_dict)
+=======
+                notes.append(node.to_dict())
+>>>>>>> 3d1e6b30ee7ccd873e864d22b70788c5ca7f2045
 
         print(f"Found {len(notes)} notes in mindmap")
         return notes

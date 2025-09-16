@@ -5,6 +5,10 @@
 Anki-Freeplane Pro is a plugin for the **Anki flashcard system** that converts **Freeplane/Freemind (.mm) mind maps** into Anki cards.
 This plugin is developed based on [lajohnston/anki-freeplane (MIT)](https://github.com/lajohnston/anki-freeplane) by **aaa1386**.
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3d1e6b30ee7ccd873e864d22b70788c5ca7f2045
 ## ✨ Features
 
 1. **Card Syncing**
@@ -28,11 +32,19 @@ The back of cards can display child nodes in an outline format.
 
 By default, outline depth is limited to 3 levels (to avoid infinite recursion).
 
+<<<<<<< HEAD
 Users can override this limit by adding an attribute back_layers to a node.
 
 Example: back_layers = 5 → the outline will expand up to 5 child levels.
 
 If back_layers is missing or invalid → default 3 levels will be used.
+=======
+Users can override this limit by adding an attribute back_levels to a node.
+
+Example: back_levels = 5 → the outline will expand up to 5 child levels.
+
+If back_levels is missing or invalid → default 3 levels will be used.
+>>>>>>> 3d1e6b30ee7ccd873e864d22b70788c5ca7f2045
 
 
 ## 💻 Installation / How to Install
@@ -130,3 +142,13 @@ Using Manage Excluded Paths, you can mark files or folders so that their corresp
 
 • Manage Excluded Paths → manage paths to exclude from card deletion.
 
+<<<<<<< HEAD
+=======
+
+🔔 Important Note:
+A new script to help create Anki cards has been developed, which is very useful. To use it, you need to install this script in Freeplane:
+Template for Anki Cards
+
+💾 Save/Install the Script:
+You can save it in your user scripts folder to make it permanently available. After saving, restart Freeplane.
+>>>>>>> 3d1e6b30ee7ccd873e864d22b70788c5ca7f2045
