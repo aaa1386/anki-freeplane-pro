@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # mindmap.py - نسخه نهایی اصلاح‌شده
 # Based on lajohnston/anki-freeplane (MIT), developed by aaa1386
 
