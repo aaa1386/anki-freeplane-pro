@@ -135,7 +135,7 @@ def is_excluded(pfile: str):
 # ============================
 # Remove old notes
 # ============================
-def remove_old_notes(mindmap_files: dict, single_file_mode=False):
+def remove_old_notes(mindmap_files: dict, base_folder: str = None, single_file_mode=False):
     model_name = "Freeplane basic"
     model = mw.col.models.byName(model_name)
     if not model:
@@ -163,13 +163,19 @@ def remove_old_notes(mindmap_files: dict, single_file_mode=False):
         pfile_norm = normalize_pfile(pfile)
         node_id_norm = normalize_id(node_id)
 
+        # مسیر باید در پوشه انتخاب شده باشد
+        if base_folder:
+            base_norm = os.path.normcase(os.path.normpath(base_folder))
+            if not (pfile_norm.startswith(base_norm + os.sep) or pfile_norm == base_norm):
+                continue  # کارت مربوط به پوشه دیگری است → حذف نکن
+
+        # exclude list
         if any(pfile_norm == excl or pfile_norm.startswith(excl + os.sep) for excl in exclude_list):
             continue
 
         if single_file_mode and pfile_norm not in normalized_files:
             continue
 
-        # حذف کارت هایی که فایل حذف شده یا نود دیگر وجود ندارد
         if not os.path.exists(pfile_norm) or node_id_norm not in normalized_files.get(pfile_norm, set()):
             to_delete.append(note.id)
 
@@ -188,7 +194,7 @@ def importMindmapFromFile():
         return
 
     mindmap_files = {file_path: get_ids_from_file(file_path)}
-    deleted_count = remove_old_notes(mindmap_files, single_file_mode=True)
+    deleted_count = remove_old_notes(mindmap_files, base_folder=os.path.dirname(file_path), single_file_mode=True)
 
     importer = Importer(mw.col)
     reader = Reader()
@@ -201,7 +207,6 @@ def importMindmapFromFile():
             note["PFile"] = file_path
             result = importer.import_note(note)
             if result:
-                # بررسی همزمان ID و PFile
                 existing = mw.col.findNotes(f'ID:{note["id"]} PFile:"{note["PFile"].replace("\\","\\\\")}"')
                 if existing:
                     updated_notes.append(note['id'])
@@ -228,9 +233,8 @@ def importMindmapFromFolder():
             if file.lower().endswith(".mm"):
                 mm_files.append(os.path.join(root, file))
 
-    # وقتی هیچ فایل وجود ندارد
     if not mm_files:
-        deleted_count = remove_old_notes({})  # حذف کارت‌های قدیمی مرتبط با این پوشه
+        deleted_count = remove_old_notes({}, base_folder=folder)
         mw.reset()
         showInfo(
             f"📂 No .mm files found in folder or subfolders.\n"
@@ -238,9 +242,8 @@ def importMindmapFromFolder():
         )
         return
 
-    # وقتی فایل وجود دارد
     mindmap_files = {fp: get_ids_from_file(fp) for fp in mm_files}
-    deleted_count = remove_old_notes(mindmap_files)
+    deleted_count = remove_old_notes(mindmap_files, base_folder=folder)
 
     importer = Importer(mw.col)
     reader = Reader()
