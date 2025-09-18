@@ -185,8 +185,8 @@ def remove_old_notes(mindmap_files: dict, base_folder: str = None, single_file_m
 
     return len(to_delete)
 
-# ============================
-# Import functions
+
+# Import functions (fixed)
 # ============================
 def importMindmapFromFile():
     file_path, _ = QFileDialog.getOpenFileName(caption="Select a .mm file", filter="Freeplane mindmap files (*.mm)")
@@ -205,13 +205,13 @@ def importMindmapFromFile():
         notes = reader.get_notes(ET.parse(file_path), file_path)
         for note in notes:
             note["PFile"] = file_path
+            # بررسی اینکه کارت قبل از import موجود بود
+            existing = mw.col.findNotes(f'ID:{note["id"]} PFile:"{note["PFile"].replace("\\","\\\\")}"')
             result = importer.import_note(note)
-            if result:
-                existing = mw.col.findNotes(f'ID:{note["id"]} PFile:"{note["PFile"].replace("\\","\\\\")}"')
-                if existing:
-                    updated_notes.append(note['id'])
-                else:
-                    imported_notes.append(note['id'])
+            if existing:
+                updated_notes.append(note['id'])
+            else:
+                imported_notes.append(note['id'])
     except Exception as e:
         showInfo(f"Error importing notes from file {file_path}:\n{e}")
 
@@ -221,6 +221,7 @@ def importMindmapFromFile():
         f"🔄 {len(updated_notes)} notes updated\n"
         f"🗑️ {deleted_count} notes deleted"
     )
+
 
 def importMindmapFromFolder():
     folder = QFileDialog.getExistingDirectory(caption="Select a folder")
@@ -255,13 +256,12 @@ def importMindmapFromFolder():
             notes = reader.get_notes(ET.parse(file_path), file_path)
             for note in notes:
                 note["PFile"] = file_path
+                existing = mw.col.findNotes(f'ID:{note["id"]} PFile:"{note["PFile"].replace("\\","\\\\")}"')
                 result = importer.import_note(note)
-                if result:
-                    existing = mw.col.findNotes(f'ID:{note["id"]} PFile:"{note["PFile"].replace("\\","\\\\")}"')
-                    if existing:
-                        updated_notes.append(note['id'])
-                    else:
-                        imported_notes.append(note['id'])
+                if existing:
+                    updated_notes.append(note['id'])
+                else:
+                    imported_notes.append(note['id'])
         except Exception as e:
             showInfo(f"Error in file {file_path}:\n{e}")
 
@@ -271,7 +271,6 @@ def importMindmapFromFolder():
         f"🔄 {len(updated_notes)} notes updated\n"
         f"🗑️ {deleted_count} notes deleted"
     )
-
 # ============================
 # Menu actions
 # ============================
