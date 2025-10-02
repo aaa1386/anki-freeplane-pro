@@ -1,14 +1,13 @@
 # Based on lajohnston/anki-freeplane (MIT), developed by aaa1386
-
 import os
 import xml.etree.ElementTree as ET
 from aqt import mw
 from aqt.utils import showInfo
 from aqt.qt import QAction, QFileDialog, QDialog, QVBoxLayout, QListWidget, QPushButton, QMessageBox
-
 from .freeplane_importer.model_not_found_exception import ModelNotFoundException
 from .freeplane_importer.reader import Reader
 from .freeplane_importer.importer import Importer
+from .freeplane_importer.node import Node
 
 EXCLUDE_FROM_DELETE_FILE = os.path.join(os.path.dirname(__file__), "exclude_files.txt")
 
@@ -98,8 +97,9 @@ mw.form.menuTools.addAction(action_manage_exclude)
 # Helpers
 # ============================
 def normalize_id(node_id: str) -> str:
-    if node_id.startswith("ID_"):
-        return node_id[3:]
+    # همیشه ID با پیشوند ID_ برگردانده می‌شود
+    if not node_id.startswith("ID_"):
+        node_id = f"ID_{node_id}"
     return node_id
 
 def normalize_pfile(pfile_url: str) -> str:
@@ -116,10 +116,10 @@ def get_ids_from_file(file_path):
     try:
         tree = ET.parse(file_path)
         root = tree.getroot()
-        for node in root.iter('node'):
-            node_id = node.attrib.get('ID')
-            if node_id:
-                ids.add(normalize_id(node_id))
+        for node_elem in root.iter('node'):
+            node = Node(tree, node_elem, file_path)
+            if node.should_create_card():
+                ids.add(node.get_node_id())
     except Exception as e:
         showInfo(f"Error reading file {file_path}:\n{e}")
     return ids
@@ -173,11 +173,15 @@ def remove_old_notes(mindmap_files: dict, base_folder: str = None, single_file_m
         if any(pfile_norm == excl or pfile_norm.startswith(excl + os.sep) for excl in exclude_list):
             continue
 
-        if single_file_mode and pfile_norm not in normalized_files:
-            continue
-
-        if not os.path.exists(pfile_norm) or node_id_norm not in normalized_files.get(pfile_norm, set()):
+        # بررسی کارت بودن قبل از بررسی ID در فایل
+        file_ids = normalized_files.get(pfile_norm, set())
+        if pfile_norm not in normalized_files:
+            # اگر فایل در مسیر سینک موجود نیست → حذف کارت
             to_delete.append(note.id)
+        elif node_id_norm not in file_ids:
+            # اگر ID در فایل پیدا نشد → حذف کارت
+            to_delete.append(note.id)
+        # اگر ID پیدا شد → از حذف چشم پوشی می‌کنیم
 
     if to_delete:
         mw.col.remNotes(to_delete)
@@ -185,8 +189,8 @@ def remove_old_notes(mindmap_files: dict, base_folder: str = None, single_file_m
 
     return len(to_delete)
 
-
-# Import functions (fixed)
+# ============================
+# Import functions
 # ============================
 def importMindmapFromFile():
     file_path, _ = QFileDialog.getOpenFileName(caption="Select a .mm file", filter="Freeplane mindmap files (*.mm)")
@@ -205,7 +209,6 @@ def importMindmapFromFile():
         notes = reader.get_notes(ET.parse(file_path), file_path)
         for note in notes:
             note["PFile"] = file_path
-            # بررسی اینکه کارت قبل از import موجود بود
             existing = mw.col.findNotes(f'ID:{note["id"]} PFile:"{note["PFile"].replace("\\","\\\\")}"')
             result = importer.import_note(note)
             if existing:
@@ -221,7 +224,6 @@ def importMindmapFromFile():
         f"🔄 {len(updated_notes)} notes updated\n"
         f"🗑️ {deleted_count} notes deleted"
     )
-
 
 def importMindmapFromFolder():
     folder = QFileDialog.getExistingDirectory(caption="Select a folder")
@@ -271,6 +273,7 @@ def importMindmapFromFolder():
         f"🔄 {len(updated_notes)} notes updated\n"
         f"🗑️ {deleted_count} notes deleted"
     )
+
 # ============================
 # Menu actions
 # ============================
