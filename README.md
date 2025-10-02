@@ -45,105 +45,117 @@ If back_levels is missing or invalid → default 3 levels will be used.
 
 ## 💻 Installation / How to Install
 
-There are two ways to install Anki-Freeplane Pro:
 
-### From AnkiWeb
 
-1. Go to [Anki-Freeplane Pro on AnkiWeb](https://ankiweb.net/shared/info/1554342344?cb=1755614751979).
-2. Search for Anki-Freeplane Pro.
-3. Follow the instructions on AnkiWeb to install the add-on directly into Anki.
+First, download the latest version of both add-ons. Many bugs have been fixed in this newest version.
 
-### From GitHub Release
 
-1. Go to [GitHub repository](https://github.com/aaa1386/anki-freeplane-pro).
-2. Download the latest release (zip file).
-3. Extract the zip file into Anki’s **add-ons folder**.
-4. Restart Anki to activate the plugin.
+## Step 1: Installing Anki-Freeplane Pro
 
-## ⚠️ Important Setup Note
+**From AnkiWeb**
+1.	Go to [Anki-Freeplane Pro on AnkiWeb](https://ankiweb.net/shared/info/1554342344?cb=1755614751979).
+2.	Search for Anki-Freeplane Pro.
+3.	Follow the instructions on AnkiWeb to install the add-on directly into Anki.
 
-After installation, make sure to import the required card model:
+**From GitHub Release**
+1.	Go to [GitHub repository](https://github.com/aaa1386/anki-freeplane-pro).
+2.	Download the latest release (zip file).
+3.	Extract the zip file into Anki’s add-ons folder.
+4.	Restart Anki to activate the plugin.
 
-• `note type.apkg` → import into Anki to create the required card model.
-Based on Basic (needed for plugin).
-Template name must stay the same, but some properties can be customized.
+## Step 2: Creating a Note Type named "Freeplane basic" in Anki.
 
-> This is crucial for displaying cards correctly in Anki. Make sure this step is done before importing any mind maps.
 
-## 🃏 Card Creation & Deck Assignment
+In the “Auxiliary files” folder, there is a file named `node type.apkg`.
+Import this file into Anki to create a note type called **Freeplane basic**.
 
-### Card Creation Rules
 
-A node becomes a card only if it has at least one of these fields (even if empty):
+<img width="193" height="200" alt="Image" src="https://github.com/user-attachments/assets/3af20dde-9b28-4028-bebd-e1dcceaf789f" />
 
-• `anki:deckbranch`
 
-• `anki:deck`
 
-• `anki:model`
 
-If none of these exist → the node is not converted into a card.
-Child nodes of a card node are used as the back of the card (up to 3 levels).
 
-**How to Add Fields:**
 
-1. Right-click the node → Add Attribute
-2. Enter field name (`anki:deckbranch`, `anki:deck`)
-3. Optionally, enter a value `anki:deckbranch`, `anki:deck`
+## Step 3: Creating Cards in Freeplane
 
-### Deck Assignment Logic
+**Card Creation Requirement:**
+At least one of the fields `anki:deck` or `anki:deckbranch` must be present.
 
-1. If the current node has `anki:deckbranch` or `anki:deck` with a non-empty value → that value is used as the deck name.
-2. If these fields are empty or missing → check ancestor nodes (closest parent upward).
-3. Only ancestors with non-empty `anki:deckbranch` are considered; the first match is used.
-4. If no valid value is found → default deck = FreeplaneDeck.
+### Method 1: Manually
 
-**Benefit:**
+1. Right-click the node → **Add Attribute**
+2. Enter the field name (`anki:deckbranch` or `anki:deck`)
+3. Enter the corresponding value (`anki:deckbranch` or `anki:deck`)
 
-• Define a default deck for a whole subtree (e.g., `anki:deckbranch = Mathematics` on the root).
+### Method 2: Using the Script `aaa1386/Anki-Freeplane-Cards`
 
-• Child cards inherit that deck unless explicitly overridden.
+It is recommended to use this method, as it is very simple, provides multiple options for creating, editing, and deleting cards, and also supports automatic card creation.
 
-• Helps keep cards organized and prevents scattering.
 
-## 🔧 Card Syncing & Management
+This script creates flashcards for the **Anki Freeplane Pro** add-on.
 
-• Cards are synced between Freeplane and Anki.
+1. Run the script in Freeplane.
+2. When executed, a window like the one below will appear:
 
-• If a node is deleted in Freeplane → its card is removed in Anki (unless excluded).
+<img width="516" height="391" alt="Image" src="https://github.com/user-attachments/assets/7d7f3d5f-5bb8-4c6d-afa6-296eb39c541a" />
 
-### Excluding Paths from Deletion
+Assume the node `QQ` is selected:
 
-Using Manage Excluded Paths, you can mark files or folders so that their corresponding cards in Anki will never be deleted.
+* The text of `QQ` will appear on the card.
+* The children of `QQ` will appear on the back of the card up to the number of levels set in the `BackLevels` field.
+* Using the `anki:deck` field, you can specify which deck in Anki the card should go to.
 
-**Benefit:**
+  * Example: if the value is `AAA::BBB`, the card will be added to the `BBB` deck under the `AAA` branch.
 
-• You can dedicate an `.mm` file solely as a card generator.
+**Field: `anki:deckbranch`**
+Assume the value is set to `OOO`:
 
-• Cards will be created from that file.
+* All cards under the `QQ` subtree that meet the card creation conditions, along with the `QQ` node itself, will be added to the `OOO` deck if `anki:deck` is not set.
 
-• Even if nodes/cards are removed from the `.mm` file later, the cards in Anki will remain.
 
-## 📦 Auxiliary Files & Tools
+* Changing these fields ensures optimal updating of cards.
+* If you run the script without filling any fields, pressing **OK** will automatically create cards, and the deck names will be assigned logically. 
 
-### Auxiliary Files Folder
+You can also automatically create cards using the **"Auto Create Card"** option.
 
-• `ExampleMindmap.mm` → example mind map for testing.
+* If the `BackLevels` field is empty, by default three levels of children will appear on the back of the card.
 
-### Tools Menu in Anki
+**Radio Options:**
 
-• "Sync Cards from Freeplane File" option → import and Sync a single `.mm` file.
+* `Add ANKI icon`
+* `Add Card tag`
+* `Add Both`
+* `None`
 
-• "Sync Cards from Folder (and Subfolders)" option → import and Sync all `.mm` files in a folder .
+> These options determine how cards are displayed in Freeplane (icon, tag, both, or none). They only affect the display in Freeplane and do not impact Anki.
 
-• "Manage Excluded Paths" option → select the paths and files you want to exclude from card sync and import.
 
-=======
 
-🔔 Important Note:
-A new script to help create Anki cards has been developed, which is very useful. To use it, you need to install this script in Freeplane:
-Template for Anki Cards
+## Step 4: Importing Cards from Freeplane to Anki
 
-💾 Save/Install the Script:
-You can save it in your user scripts folder to make it permanently available. After saving, restart Freeplane.
+In the **Tools** menu in Anki, there are three options:
+
+1. **Sync Cards from Freeplane File** → Import and sync a single `.mm` file
+
+   * Cards that have been deleted in Freeplane or no longer meet the card creation criteria will be removed from Anki.
+
+2. **Sync Cards from Folder (and Subfolders)** → Import and sync all `.mm` files in a folder
+
+   * Cards that have been deleted in Freeplane or no longer meet the card creation criteria will be removed from Anki.
+
+3. **Manage Excluded Paths** → Select paths and files to exclude from sync
+
+   * If this option is enabled, cards from the selected file or folder will be imported, but deleted cards will **not** be removed from Anki.
+
+**Important Note:**
+
+* If a card is created in a `.mm` file and you move it within the same file, it will **not** be deleted from Anki.
+* Editing the fields of the card will **not** delete it; only the fields in Anki will be updated.
+* This feature allows you to move and edit cards without **losing their Due date** in Anki.
+
+
+
+These two add-ons have many features that cannot all be covered here.
+
 
