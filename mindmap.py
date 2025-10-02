@@ -133,7 +133,7 @@ def is_excluded(pfile: str):
     return False
 
 # ============================
-# Remove old notes
+# Remove old notes (corrected)
 # ============================
 def remove_old_notes(mindmap_files: dict, base_folder: str = None, single_file_mode=False):
     model_name = "Freeplane basic"
@@ -163,31 +163,47 @@ def remove_old_notes(mindmap_files: dict, base_folder: str = None, single_file_m
         pfile_norm = normalize_pfile(pfile)
         node_id_norm = normalize_id(node_id)
 
-        # مسیر باید در پوشه انتخاب شده باشد
+        # ----------------------------
+        # 1️⃣ بررسی مسیر کارت
+        # ----------------------------
+        # مسیر باید در پوشه انتخاب شده یا همان فایل باشد
         if base_folder:
             base_norm = os.path.normcase(os.path.normpath(base_folder))
-            if not (pfile_norm.startswith(base_norm + os.sep) or pfile_norm == base_norm):
-                continue  # کارت مربوط به پوشه دیگری است → حذف نکن
+            if not single_file_mode:
+                # حالت پوشه: فقط کارت‌هایی که مسیرشان در همان پوشه/زیرپوشه است بررسی شوند
+                if not (pfile_norm.startswith(base_norm + os.sep) or pfile_norm == base_norm):
+                    continue  # کارت متعلق به پوشه دیگری است → چشم‌پوشی
+            else:
+                # حالت فایل منفرد: فقط کارت‌هایی که PFile با فایل انتخاب شده مطابقت دارند
+                if pfile_norm not in normalized_files:
+                    continue  # کارت متعلق به فایل دیگری است → چشم‌پوشی
 
-        # exclude list
+        # ----------------------------
+        # 2️⃣ exclude list
+        # ----------------------------
         if any(pfile_norm == excl or pfile_norm.startswith(excl + os.sep) for excl in exclude_list):
             continue
 
-        # بررسی کارت بودن قبل از بررسی ID در فایل
-        file_ids = normalized_files.get(pfile_norm, set())
-        if pfile_norm not in normalized_files:
-            # اگر فایل در مسیر سینک موجود نیست → حذف کارت
+        # ----------------------------
+        # 3️⃣ بررسی حذف کارت بر اساس وجود فایل و وضعیت کارت
+        # ----------------------------
+        # ۳-۱: فایل در مسیر وجود ندارد → حذف همه کارت‌های مربوط به آن
+        if not os.path.exists(pfile_norm):
             to_delete.append(note.id)
-        elif node_id_norm not in file_ids:
-            # اگر ID در فایل پیدا نشد → حذف کارت
+            continue
+
+        # ۳-۲: فایل وجود دارد ولی ID کارت در فایل/پوشه دیگر وجود ندارد یا کارت از حالت کارت خارج شده → حذف
+        ids_in_file = normalized_files.get(pfile_norm, set())
+        if node_id_norm not in ids_in_file:
             to_delete.append(note.id)
-        # اگر ID پیدا شد → از حذف چشم پوشی می‌کنیم
+            continue
 
     if to_delete:
         mw.col.remNotes(to_delete)
         mw.reset()
 
     return len(to_delete)
+
 
 # ============================
 # Import functions
