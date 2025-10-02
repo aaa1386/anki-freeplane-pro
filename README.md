@@ -34,7 +34,7 @@ Users can override this limit by adding an attribute back_layers to a node.
 Example: back_layers = 5 → the outline will expand up to 5 child levels.
 
 If back_layers is missing or invalid → default 3 levels will be used.
-=======
+
 Users can override this limit by adding an attribute back_levels to a node.
 
 Example: back_levels = 5 → the outline will expand up to 5 child levels.
