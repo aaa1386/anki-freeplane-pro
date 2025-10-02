@@ -28,8 +28,9 @@ class Node:
         if self._cached_node_id is not None:
             return self._cached_node_id
         node_id = self.element.get('ID') or str(uuid.uuid4())
-        if node_id.startswith('ID_'):
-            node_id = node_id[3:]
+        # اطمینان از اینکه همیشه ID_ در ابتدای شناسه هست
+        if not node_id.startswith('ID_'):
+            node_id = 'ID_' + node_id
         self._cached_node_id = node_id
         return node_id
 
@@ -136,8 +137,9 @@ class Node:
             return ''
         abs_path = os.path.abspath(self.file_path).replace("\\", "/")
         encoded_path = urllib.parse.quote(abs_path)
-        anchor = 'ID_' + self.get_node_id()
+        anchor = self.get_node_id()  # اینجا خودش ID_ دارد
         return f'freeplane:/%20/{encoded_path}#{anchor}'
+
 
     def __build_custom_path_link(self, node_id):
         if not self.file_path:
@@ -184,7 +186,7 @@ class Node:
             for node in nodes_to_display
         ]
         path_text = " ← ".join(rtl_nodes[:-1]) + " ←" if len(rtl_nodes) > 1 else "←"
-        anchor = 'ID_' + node_id
+        anchor = node_id  # اینجا هم خودش ID_ دارد
         return f'<a href="freeplane:/%20/{encoded_path}#{anchor}" style="text-decoration:none; color:#007acc;">{path_text}</a>'
 
     def __build_outline_recursive(self, children, depth=0, max_depth=3):
