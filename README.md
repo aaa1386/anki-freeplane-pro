@@ -88,8 +88,8 @@ Child nodes of a card node are used as the back of the card (up to 3 levels).
 **How to Add Fields:**
 
 1. Right-click the node → Add Attribute
-2. Enter field name (`anki:deckbranch`, `anki:deck`, or `anki:model`)
-3. Optionally, enter a value (deck/model name)
+2. Enter field name (`anki:deckbranch`, `anki:deck`)
+3. Optionally, enter a value `anki:deckbranch`, `anki:deck`
 
 ### Deck Assignment Logic
 
@@ -132,13 +132,12 @@ Using Manage Excluded Paths, you can mark files or folders so that their corresp
 
 ### Tools Menu in Anki
 
-• Import Cards from Freeplane → import a single `.mm` file.
+• "Sync Cards from Freeplane File" option → import and Sync a single `.mm` file.
 
-• Import Cards from Folder → import all `.mm` files in a folder (recursive).
+• "Sync Cards from Folder (and Subfolders)" option → import and Sync all `.mm` files in a folder .
 
-• Manage Excluded Paths → manage paths to exclude from card deletion.
+• "Manage Excluded Paths" option → select the paths and files you want to exclude from card sync and import.
 
-<<<<<<< HEAD
 =======
 
 🔔 Important Note:
@@ -147,4 +146,4 @@ Template for Anki Cards
 
 💾 Save/Install the Script:
 You can save it in your user scripts folder to make it permanently available. After saving, restart Freeplane.
->>>>>>> 3d1e6b30ee7ccd873e864d22b70788c5ca7f2045
+
