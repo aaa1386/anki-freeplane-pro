@@ -97,7 +97,6 @@ mw.form.menuTools.addAction(action_manage_exclude)
 # Helpers
 # ============================
 def normalize_id(node_id: str) -> str:
-    # همیشه ID با پیشوند ID_ برگردانده می‌شود
     if not node_id.startswith("ID_"):
         node_id = f"ID_{node_id}"
     return node_id
@@ -166,17 +165,14 @@ def remove_old_notes(mindmap_files: dict, base_folder: str = None, single_file_m
         # ----------------------------
         # 1️⃣ بررسی مسیر کارت
         # ----------------------------
-        # مسیر باید در پوشه انتخاب شده یا همان فایل باشد
         if base_folder:
             base_norm = os.path.normcase(os.path.normpath(base_folder))
             if not single_file_mode:
-                # حالت پوشه: فقط کارت‌هایی که مسیرشان در همان پوشه/زیرپوشه است بررسی شوند
                 if not (pfile_norm.startswith(base_norm + os.sep) or pfile_norm == base_norm):
-                    continue  # کارت متعلق به پوشه دیگری است → چشم‌پوشی
+                    continue
             else:
-                # حالت فایل منفرد: فقط کارت‌هایی که PFile با فایل انتخاب شده مطابقت دارند
                 if pfile_norm not in normalized_files:
-                    continue  # کارت متعلق به فایل دیگری است → چشم‌پوشی
+                    continue
 
         # ----------------------------
         # 2️⃣ exclude list
@@ -185,14 +181,12 @@ def remove_old_notes(mindmap_files: dict, base_folder: str = None, single_file_m
             continue
 
         # ----------------------------
-        # 3️⃣ بررسی حذف کارت بر اساس وجود فایل و وضعیت کارت
+        # 3️⃣ بررسی حذف کارت
         # ----------------------------
-        # ۳-۱: فایل در مسیر وجود ندارد → حذف همه کارت‌های مربوط به آن
         if not os.path.exists(pfile_norm):
             to_delete.append(note.id)
             continue
 
-        # ۳-۲: فایل وجود دارد ولی ID کارت در فایل/پوشه دیگر وجود ندارد یا کارت از حالت کارت خارج شده → حذف
         ids_in_file = normalized_files.get(pfile_norm, set())
         if node_id_norm not in ids_in_file:
             to_delete.append(note.id)
@@ -204,17 +198,20 @@ def remove_old_notes(mindmap_files: dict, base_folder: str = None, single_file_m
 
     return len(to_delete)
 
-
 # ============================
-# Import functions
+# Import functions (fixed)
 # ============================
 def importMindmapFromFile():
-    file_path, _ = QFileDialog.getOpenFileName(caption="Select a .mm file", filter="Freeplane mindmap files (*.mm)")
+    file_path, _ = QFileDialog.getOpenFileName(
+        caption="Select a .mm file", filter="Freeplane mindmap files (*.mm)"
+    )
     if not file_path:
         return
 
     mindmap_files = {file_path: get_ids_from_file(file_path)}
-    deleted_count = remove_old_notes(mindmap_files, base_folder=os.path.dirname(file_path), single_file_mode=True)
+    deleted_count = remove_old_notes(
+        mindmap_files, base_folder=os.path.dirname(file_path), single_file_mode=True
+    )
 
     importer = Importer(mw.col)
     reader = Reader()
@@ -225,12 +222,26 @@ def importMindmapFromFile():
         notes = reader.get_notes(ET.parse(file_path), file_path)
         for note in notes:
             note["PFile"] = file_path
-            existing = mw.col.findNotes(f'ID:{note["id"]} PFile:"{note["PFile"].replace("\\","\\\\")}"')
-            result = importer.import_note(note)
-            if existing:
-                updated_notes.append(note['id'])
+            existing_notes = mw.col.findNotes(
+                f'ID:{note["id"]} PFile:"{note["PFile"].replace("\\","\\\\")}"'
+            )
+            if existing_notes:
+                existing_note = mw.col.getNote(existing_notes[0])
+                fields_to_check = ["Front", "Back", "anki:deckbranch", "anki:deck", "BackLevels"]
+                updated = False
+                for field in fields_to_check:
+                    note_value = str(note[field]).strip() if field in note else ""
+                    existing_value = str(existing_note[field]).strip() if field in existing_note else ""
+                    if note_value != existing_value:
+                        updated = True
+                        break
+                if updated:
+                    updated_notes.append(note["id"])
+                # حتی اگر آپدیت نشده باشد، note را import می‌کنیم ولی جزو updated حساب نمی‌شود
+                importer.import_note(note)
             else:
-                imported_notes.append(note['id'])
+                importer.import_note(note)
+                imported_notes.append(note["id"])
     except Exception as e:
         showInfo(f"Error importing notes from file {file_path}:\n{e}")
 
@@ -240,6 +251,7 @@ def importMindmapFromFile():
         f"🔄 {len(updated_notes)} notes updated\n"
         f"🗑️ {deleted_count} notes deleted"
     )
+
 
 def importMindmapFromFolder():
     folder = QFileDialog.getExistingDirectory(caption="Select a folder")
@@ -274,12 +286,25 @@ def importMindmapFromFolder():
             notes = reader.get_notes(ET.parse(file_path), file_path)
             for note in notes:
                 note["PFile"] = file_path
-                existing = mw.col.findNotes(f'ID:{note["id"]} PFile:"{note["PFile"].replace("\\","\\\\")}"')
-                result = importer.import_note(note)
-                if existing:
-                    updated_notes.append(note['id'])
+                existing_notes = mw.col.findNotes(
+                    f'ID:{note["id"]} PFile:"{note["PFile"].replace("\\","\\\\")}"'
+                )
+                if existing_notes:
+                    existing_note = mw.col.getNote(existing_notes[0])
+                    fields_to_check = ["Front", "Back", "anki:deckbranch", "anki:deck", "BackLevels"]
+                    updated = False
+                    for field in fields_to_check:
+                        note_value = str(note[field]).strip() if field in note else ""
+                        existing_value = str(existing_note[field]).strip() if field in existing_note else ""
+                        if note_value != existing_value:
+                            updated = True
+                            break
+                    if updated:
+                        updated_notes.append(note["id"])
+                    importer.import_note(note)
                 else:
-                    imported_notes.append(note['id'])
+                    importer.import_note(note)
+                    imported_notes.append(note["id"])
         except Exception as e:
             showInfo(f"Error in file {file_path}:\n{e}")
 
@@ -289,6 +314,7 @@ def importMindmapFromFolder():
         f"🔄 {len(updated_notes)} notes updated\n"
         f"🗑️ {deleted_count} notes deleted"
     )
+
 
 # ============================
 # Menu actions
