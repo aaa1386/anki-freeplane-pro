@@ -47,7 +47,12 @@ If back_levels is missing or invalid → default 3 levels will be used.
 
 
 
-First, download the latest version of both add-ons. Many bugs have been fixed in this newest version.
+
+
+
+
+**Be sure to download the latest versions of both add-ons,  **anki-freeplane-pro** and **Anki-Freeplane-Cards**, as many bugs have been fixed in these updates.
+
 
 
 ## Step 1: Installing Anki-Freeplane Pro
@@ -69,9 +74,7 @@ First, download the latest version of both add-ons. Many bugs have been fixed in
 In the “Auxiliary files” folder, there is a file named `node type.apkg`.
 Import this file into Anki to create a note type called **Freeplane basic**.
 
-
-<img width="193" height="200" alt="Image" src="https://github.com/user-attachments/assets/3af20dde-9b28-4028-bebd-e1dcceaf789f" />
-
+<img width="679" height="400" alt="Image" src="https://github.com/user-attachments/assets/613cca84-af3d-4fb6-b541-53bcc420873a" />
 
 
 
@@ -88,7 +91,7 @@ At least one of the fields `anki:deck` or `anki:deckbranch` must be present.
 2. Enter the field name (`anki:deckbranch` or `anki:deck`)
 3. Enter the corresponding value (`anki:deckbranch` or `anki:deck`)
 
-### Method 2: Using the Script `aaa1386/Anki-Freeplane-Cards`
+### Method 2: Using the Script (https://github.com/aaa1386/Anki-Freeplane-Cards)
 
 It is recommended to use this method, as it is very simple, provides multiple options for creating, editing, and deleting cards, and also supports automatic card creation.
 
@@ -98,7 +101,7 @@ This script creates flashcards for the **Anki Freeplane Pro** add-on.
 1. Run the script in Freeplane.
 2. When executed, a window like the one below will appear:
 
-<img width="516" height="391" alt="Image" src="https://github.com/user-attachments/assets/7d7f3d5f-5bb8-4c6d-afa6-296eb39c541a" />
+<img width="397" height="300" alt="Image" src="https://github.com/user-attachments/assets/c27104d2-3013-4f12-84a5-5a8e80cc3476" />
 
 Assume the node `QQ` is selected:
 
@@ -128,9 +131,9 @@ You can also automatically create cards using the **"Auto Create Card"** option.
 * `Add Both`
 * `None`
 
-> These options determine how cards are displayed in Freeplane (icon, tag, both, or none). They only affect the display in Freeplane and do not impact Anki.
+ These options determine how cards are displayed in Freeplane (icon, tag, both, or none). They only affect the display in Freeplane and do not impact Anki.
 
-
+<img width="351" height="400" alt="Image" src="https://github.com/user-attachments/assets/e91185f5-eadf-4416-99c6-1f054409a162" />
 
 ## Step 4: Importing Cards from Freeplane to Anki
 
@@ -154,8 +157,7 @@ In the **Tools** menu in Anki, there are three options:
 * Editing the fields of the card will **not** delete it; only the fields in Anki will be updated.
 * This feature allows you to move and edit cards without **losing their Due date** in Anki.
 
-
+<img width="314" height="300" alt="Image" src="https://github.com/user-attachments/assets/b26969b1-ab98-43ea-a95d-f68e9fbc718a" />
 
 These two add-ons have many features that cannot all be covered here.
-
 
