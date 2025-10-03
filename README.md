@@ -51,6 +51,7 @@ If back_levels is missing or invalid → default 3 levels will be used.
 
 
 
+
 **Be sure to download the latest versions of both add-ons,  **anki-freeplane-pro** and **Anki-Freeplane-Cards**, as many bugs have been fixed in these updates.
 
 
@@ -112,10 +113,12 @@ Assume the node `QQ` is selected:
   * Example: if the value is `AAA::BBB`, the card will be added to the `BBB` deck under the `AAA` branch.
 
 **Field: `anki:deckbranch`**
-Assume the value is set to `OOO`:
+Suppose its value is set to OOO and suppose the node `QQ` is selected:
 
-* All cards under the `QQ` subtree that meet the card creation conditions, along with the `QQ` node itself, will be added to the `OOO` deck if `anki:deck` is not set.
+All cards within the QQ subtree that meet the card creation conditions, along with the QQ node itself, will be added to the OOO deck (if the anki:deck field is not set, or if the card is created automatically).
 
+This process continues until a new card with the anki:deckbranch field is created; from that point onward, all descendant nodes will automatically be assigned to the new parent deck.
+It is clear that if the user explicitly sets anki:deck, this manual setting takes precedence and the automatic assignment will be ignored.
 
 * Changing these fields ensures optimal updating of cards.
 * If you run the script without filling any fields, pressing **OK** will automatically create cards, and the deck names will be assigned logically. 
