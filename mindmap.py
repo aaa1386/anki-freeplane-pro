@@ -10,47 +10,36 @@ from .freeplane_importer.importer import Importer
 from .freeplane_importer.node import Node
 
 # ============================
-# Exclude files
+# Exclude files for different operations
 # ============================
 EXCLUDE_FROM_DELETE_FILE = os.path.join(os.path.dirname(__file__), "exclude_delete.txt")
-EXCLUDE_FROM_IMPORT_FILE = os.path.join(os.path.dirname(__file__), "exclude_import.txt")
+EXCLUDE_FROM_SYNC_FILE = os.path.join(os.path.dirname(__file__), "exclude_sync.txt")
 
-# ----------------------------
-# Helpers to load/save lists
-# ----------------------------
-def load_list(file_path):
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
+# ============================
+# Manage excluded paths
+# ============================
+def load_exclude_list(exclude_file):
+    if os.path.exists(exclude_file):
+        with open(exclude_file, "r", encoding="utf-8") as f:
             return [line.strip() for line in f if line.strip()]
     return []
 
-def save_list(lst, file_path):
-    with open(file_path, "w", encoding="utf-8") as f:
+def save_exclude_list(lst, exclude_file):
+    with open(exclude_file, "w", encoding="utf-8") as f:
         for item in lst:
             f.write(f"{item}\n")
 
-def is_excluded(pfile, exclude_file):
-    pfile_norm = os.path.normcase(os.path.normpath(pfile))
-    for excl in load_list(exclude_file):
-        excl_norm = os.path.normcase(os.path.normpath(excl))
-        if pfile_norm == excl_norm or pfile_norm.startswith(excl_norm + os.sep):
-            return True
-    return False
-
-# ============================
-# Dialog for managing excludes
-# ============================
 class ExcludeManagerDialog(QDialog):
-    def __init__(self, file_path, title, parent=None):
+    def __init__(self, exclude_file, title, parent=None):
         super().__init__(parent)
-        self.file_path = file_path
+        self.exclude_file = exclude_file
         self.setWindowTitle(title)
         self.resize(600, 400)
 
         self.layout = QVBoxLayout(self)
         self.list_widget = QListWidget()
         self.layout.addWidget(self.list_widget)
-        self.load_list_widget()
+        self.load_list()
 
         self.btn_add_file = QPushButton("Add File")
         self.btn_add_folder = QPushButton("Add Folder")
@@ -63,68 +52,65 @@ class ExcludeManagerDialog(QDialog):
         self.btn_add_folder.clicked.connect(self.add_folder)
         self.btn_remove.clicked.connect(self.remove_selected)
 
-    def load_list_widget(self):
+    def load_list(self):
         self.list_widget.clear()
-        for path in load_list(self.file_path):
+        for path in load_exclude_list(self.exclude_file):
             self.list_widget.addItem(path)
 
     def add_file(self):
         file_path, _ = QFileDialog.getOpenFileName(caption="Select a file to exclude")
         if file_path:
-            lst = load_list(self.file_path)
+            lst = load_exclude_list(self.exclude_file)
             if file_path not in lst:
                 lst.append(file_path)
-                save_list(lst, self.file_path)
-                self.load_list_widget()
+                save_exclude_list(lst, self.exclude_file)
+                self.load_list()
                 QMessageBox.information(self, "Success", f"File {file_path} added to exclude list.")
 
     def add_folder(self):
         folder_path = QFileDialog.getExistingDirectory(caption="Select a folder to exclude")
         if folder_path:
-            lst = load_list(self.file_path)
+            lst = load_exclude_list(self.exclude_file)
             if folder_path not in lst:
                 lst.append(folder_path)
-                save_list(lst, self.file_path)
-                self.load_list_widget()
+                save_exclude_list(lst, self.exclude_file)
+                self.load_list()
                 QMessageBox.information(self, "Success", f"Folder {folder_path} added to exclude list.")
 
     def remove_selected(self):
         selected_items = self.list_widget.selectedItems()
         if not selected_items:
             return
-        lst = load_list(self.file_path)
+        lst = load_exclude_list(self.exclude_file)
         for item in selected_items:
             path = item.text()
             if path in lst:
                 lst.remove(path)
-        save_list(lst, self.file_path)
-        self.load_list_widget()
+        save_exclude_list(lst, self.exclude_file)
+        self.load_list()
         QMessageBox.information(self, "Success", "Selected path(s) removed.")
 
-# ----------------------------
-# Open dialogs
-# ----------------------------
-def open_delete_exclude_manager():
-    dlg = ExcludeManagerDialog(EXCLUDE_FROM_DELETE_FILE, "🚫 Excluded Paths – Card Deletion", mw)
+def open_exclude_manager(exclude_file, title):
+    dlg = ExcludeManagerDialog(exclude_file, title, mw)
     dlg.exec()
-
-def open_import_exclude_manager():
-    dlg = ExcludeManagerDialog(EXCLUDE_FROM_IMPORT_FILE, "🚫 Excluded Paths – Card Import", mw)
-    dlg.exec()
-
-# ----------------------------
-# Add actions to menu
-# ----------------------------
-action_manage_delete_exclude = QAction("🚫 Excluded Paths – Card Deletion", mw)
-action_manage_delete_exclude.triggered.connect(open_delete_exclude_manager)
-mw.form.menuTools.addAction(action_manage_delete_exclude)
-
-action_manage_import_exclude = QAction("🚫 Excluded Paths – Card Import", mw)
-action_manage_import_exclude.triggered.connect(open_import_exclude_manager)
-mw.form.menuTools.addAction(action_manage_import_exclude)
 
 # ============================
-# Helpers for IDs and paths
+# QAction menu items
+# ============================
+action_manage_delete_exclude = QAction("🚫 Excluded Paths from Anki Card Deletion", mw)
+action_manage_delete_exclude.triggered.connect(
+    lambda: open_exclude_manager(EXCLUDE_FROM_DELETE_FILE, "🚫 Excluded Paths from Anki Card Deletion")
+)
+mw.form.menuTools.addAction(action_manage_delete_exclude)
+
+action_manage_sync_exclude = QAction("🚫 Excluded Paths from Sync", mw)
+action_manage_sync_exclude.triggered.connect(
+    lambda: open_exclude_manager(EXCLUDE_FROM_SYNC_FILE, "🚫 Excluded Paths from Sync")
+)
+mw.form.menuTools.addAction(action_manage_sync_exclude)
+
+# ============================
+# Helpers
 # ============================
 def normalize_id(node_id: str) -> str:
     if not node_id.startswith("ID_"):
@@ -153,6 +139,14 @@ def get_ids_from_file(file_path):
         showInfo(f"Error reading file {file_path}:\n{e}")
     return ids
 
+def is_excluded(pfile: str, exclude_file: str):
+    pfile_norm = os.path.normcase(os.path.normpath(pfile))
+    for excl in load_exclude_list(exclude_file):
+        excl_norm = os.path.normcase(os.path.normpath(excl))
+        if pfile_norm == excl_norm or pfile_norm.startswith(excl_norm + os.sep):
+            return True
+    return False
+
 # ============================
 # Remove old notes
 # ============================
@@ -169,6 +163,8 @@ def remove_old_notes(mindmap_files: dict, base_folder: str = None, single_file_m
 
     to_delete = []
     normalized_files = {os.path.normcase(os.path.normpath(fp)): ids for fp, ids in mindmap_files.items()}
+    exclude_list_delete = [os.path.normcase(os.path.normpath(e)) for e in load_exclude_list(EXCLUDE_FROM_DELETE_FILE)]
+    exclude_list_sync = [os.path.normcase(os.path.normpath(e)) for e in load_exclude_list(EXCLUDE_FROM_SYNC_FILE)]
 
     for note in notes:
         try:
@@ -183,7 +179,9 @@ def remove_old_notes(mindmap_files: dict, base_folder: str = None, single_file_m
         pfile_norm = normalize_pfile(pfile)
         node_id_norm = normalize_id(node_id)
 
-        # Base folder check
+        # ----------------------------
+        # بررسی مسیر کارت نسبت به base_folder
+        # ----------------------------
         if base_folder:
             base_norm = os.path.normcase(os.path.normpath(base_folder))
             if not single_file_mode:
@@ -193,11 +191,18 @@ def remove_old_notes(mindmap_files: dict, base_folder: str = None, single_file_m
                 if pfile_norm not in normalized_files:
                     continue
 
-        # Exclude from deletion
-        if is_excluded(pfile_norm, EXCLUDE_FROM_DELETE_FILE):
-            continue
+        # ----------------------------
+        # بررسی استثنا از حذف و استثنا از سینک
+        # ----------------------------
+        if any(pfile_norm == excl or pfile_norm.startswith(excl + os.sep) for excl in exclude_list_delete):
+            continue  # از حذف کارت مستثنا
 
-        # File existence & IDs
+        if any(pfile_norm == excl or pfile_norm.startswith(excl + os.sep) for excl in exclude_list_sync):
+            continue  # از کل سینک مستثنا
+
+        # ----------------------------
+        # بررسی حذف کارت
+        # ----------------------------
         if not os.path.exists(pfile_norm):
             to_delete.append(note.id)
             continue
@@ -223,9 +228,9 @@ def importMindmapFromFile():
     if not file_path:
         return
 
-    # Exclude from import
-    if is_excluded(file_path, EXCLUDE_FROM_IMPORT_FILE):
-        showInfo(f"⚠️ File excluded from import:\n{file_path}")
+    # بررسی استثنا از سینک
+    if is_excluded(file_path, EXCLUDE_FROM_SYNC_FILE):
+        showInfo(f"⚠️ File excluded from sync:\n{file_path}")
         return
 
     mindmap_files = {file_path: get_ids_from_file(file_path)}
@@ -276,6 +281,11 @@ def importMindmapFromFolder():
     if not folder:
         return
 
+    # بررسی استثنا از سینک
+    if is_excluded(folder, EXCLUDE_FROM_SYNC_FILE):
+        showInfo(f"⚠️ Folder excluded from sync:\n{folder}")
+        return
+
     mm_files = []
     for root, dirs, files in os.walk(folder):
         for file in files:
@@ -291,8 +301,6 @@ def importMindmapFromFolder():
         )
         return
 
-    # Filter excluded files
-    mm_files = [f for f in mm_files if not is_excluded(f, EXCLUDE_FROM_IMPORT_FILE)]
     mindmap_files = {fp: get_ids_from_file(fp) for fp in mm_files}
     deleted_count = remove_old_notes(mindmap_files, base_folder=folder)
 
@@ -302,6 +310,10 @@ def importMindmapFromFolder():
     updated_notes = []
 
     for file_path in mm_files:
+        # بررسی استثنا از سینک فایل‌های داخلی
+        if is_excluded(file_path, EXCLUDE_FROM_SYNC_FILE):
+            continue
+
         try:
             notes = reader.get_notes(ET.parse(file_path), file_path)
             for note in notes:
@@ -336,7 +348,7 @@ def importMindmapFromFolder():
     )
 
 # ============================
-# Menu actions for import
+# Menu actions
 # ============================
 action_import_file = QAction("🔄 Sync Cards from Freeplane File", mw)
 action_import_file.triggered.connect(importMindmapFromFile)
