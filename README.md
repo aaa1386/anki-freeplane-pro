@@ -124,7 +124,7 @@ Assume the value is set to `OOO`:
 
 You can also automatically create cards using the **"Auto Create Card"** option.
 
-* If the `BackLevels` field is empty, by default three levels of children will appear on the back of the card.
+* If the `BackLevels` field is empty, by default three levels of children will appear on the back of the card، after importing the cards into Anki.
 
 **Radio Options:**
 
