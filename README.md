@@ -51,7 +51,6 @@ If back_levels is missing or invalid → default 3 levels will be used.
 
 
 
-
 **Be sure to download the latest versions of both add-ons,  **anki-freeplane-pro** and **Anki-Freeplane-Cards**, as many bugs have been fixed in these updates.
 
 
