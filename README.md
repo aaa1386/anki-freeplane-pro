@@ -52,7 +52,6 @@ If back_levels is missing or invalid → default 3 levels will be used.
 
 
 
-
 **Be sure to download the latest versions of both add-ons,  **anki-freeplane-pro** and **Anki-Freeplane-Cards**, as many bugs have been fixed in these updates.
 
 
@@ -164,6 +163,10 @@ In the **Tools** menu in Anki, there are three options:
 After emporting:
 
 <img width="1220" height="400" alt="Image" src="https://github.com/user-attachments/assets/c39d8c2f-69e3-42a4-bab1-de72e89b37b0" />
+
+The ancestor of the node that has been converted to a card is displayed in blue. Clicking on it will take you to that node in Freeplane.
+
+<img width="493" height="380" alt="Image" src="https://github.com/user-attachments/assets/38db4b7a-c72b-442d-b138-94317077c047" />
 
 These two add-ons have many features that cannot all be covered here.
 
