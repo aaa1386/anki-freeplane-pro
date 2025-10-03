@@ -51,6 +51,8 @@ If back_levels is missing or invalid → default 3 levels will be used.
 
 
 
+
+
 **Be sure to download the latest versions of both add-ons,  **anki-freeplane-pro** and **Anki-Freeplane-Cards**, as many bugs have been fixed in these updates.
 
 
@@ -133,7 +135,7 @@ You can also automatically create cards using the **"Auto Create Card"** option.
 
  These options determine how cards are displayed in Freeplane (icon, tag, both, or none). They only affect the display in Freeplane and do not impact Anki.
 
-<img width="351" height="400" alt="Image" src="https://github.com/user-attachments/assets/e91185f5-eadf-4416-99c6-1f054409a162" />
+<img width="522" height="400" alt="Image" src="https://github.com/user-attachments/assets/c73299e9-cd75-4e00-91df-053412e37de6" />
 
 ## Step 4: Importing Cards from Freeplane to Anki
 
@@ -158,6 +160,10 @@ In the **Tools** menu in Anki, there are three options:
 * This feature allows you to move and edit cards without **losing their Due date** in Anki.
 
 <img width="314" height="300" alt="Image" src="https://github.com/user-attachments/assets/b26969b1-ab98-43ea-a95d-f68e9fbc718a" />
+
+After emporting:
+
+<img width="1220" height="400" alt="Image" src="https://github.com/user-attachments/assets/c39d8c2f-69e3-42a4-bab1-de72e89b37b0" />
 
 These two add-ons have many features that cannot all be covered here.
 
