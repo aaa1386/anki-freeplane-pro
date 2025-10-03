@@ -20,7 +20,7 @@ This plugin is developed based on [lajohnston/anki-freeplane (MIT)](https://gith
 3. **Ancestor Path Display**
    Shows the ancestor path of each node.
    Helps visualize the exact position in the hierarchy.
-
+.
 4. **Navigate to Node**
    Click a node or its ancestor path in Anki to jump directly to the corresponding node in Freeplane.
 
