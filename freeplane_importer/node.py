@@ -13,9 +13,6 @@ class Node:
         self.children = None
         self._cached_node_id = None
 
-    # ============================
-    # Public interface
-    # ============================
     def to_dict(self):
         return {
             'id': self.get_node_id(),
@@ -28,7 +25,6 @@ class Node:
         if self._cached_node_id is not None:
             return self._cached_node_id
         node_id = self.element.get('ID') or str(uuid.uuid4())
-        # اطمینان از اینکه همیشه ID_ در ابتدای شناسه هست
         if not node_id.startswith('ID_'):
             node_id = 'ID_' + node_id
         self._cached_node_id = node_id
@@ -62,9 +58,6 @@ class Node:
             for name in ['anki:model', 'anki:deck', 'anki:deckbranch']
         )
 
-    # ============================
-    # Fields (all centralized here)
-    # ============================
     def get_fields(self, fields=None):
         if fields is None:
             fields = {}
@@ -77,6 +70,9 @@ class Node:
         node_text = self.element.get('TEXT') or ''
         node_id = self.get_node_id()
 
+        # تبدیل \n به <br> برای نمایش درست در آنکی
+        html_text = node_text.replace('\n', '<br>')
+
         for attr in attributes:
             name = attr.get('NAME')
             if name and name.startswith('anki:field:'):
@@ -86,19 +82,18 @@ class Node:
                     value = node_text
                 fields[field_name] = value
 
-        # Default fields
-        fields['Front'] = node_text
+        fields['Front'] = html_text
+
         fields['Ancestors'] = self.__build_custom_path_link(node_id)
         fields['URL'] = self.__build_freeplane_url()
+
         if 'Back' not in fields or not fields['Back']:
             max_layers = self.get_max_layers()
             outline = self.__build_outline_recursive(self.get_children(), 0, max_layers)
-            fields['Back'] = outline
+            fields['Back'] = outline.replace('\n', '<br>')
+
         return {k: (v or '') for k, v in fields.items()}
 
-    # ============================
-    # Helpers
-    # ============================
     def get_attribute(self, name):
         attr = self.element.find(f'attribute[@NAME="{name}"]')
         return attr.get('VALUE') if attr is not None else ''
@@ -121,9 +116,6 @@ class Node:
     def get_text(self):
         return self.element.get('TEXT') or ''
 
-    # ============================
-    # Private helpers for building paths and outlines
-    # ============================
     def __get_parent_node(self, element):
         current_id = element.get('ID')
         for node in self.doc.findall('.//node'):
@@ -137,9 +129,8 @@ class Node:
             return ''
         abs_path = os.path.abspath(self.file_path).replace("\\", "/")
         encoded_path = urllib.parse.quote(abs_path)
-        anchor = self.get_node_id()  # اینجا خودش ID_ دارد
+        anchor = self.get_node_id()
         return f'freeplane:/%20/{encoded_path}#{anchor}'
-
 
     def __build_custom_path_link(self, node_id):
         if not self.file_path:
@@ -153,11 +144,12 @@ class Node:
             current = self.__get_parent_node(current)
         path_nodes.reverse()
 
-        # Limit display for readability
         min_nodes = 5
         max_total_words = 30
+
         def count_words(seq):
             return sum(len(s.split()) for s in seq)
+
         if len(path_nodes) <= min_nodes and count_words(path_nodes) <= max_total_words:
             nodes_to_display = path_nodes
         else:
@@ -185,8 +177,9 @@ class Node:
             if node != "..." else "..."
             for node in nodes_to_display
         ]
+
         path_text = " ← ".join(rtl_nodes[:-1]) + " ←" if len(rtl_nodes) > 1 else "←"
-        anchor = node_id  # اینجا هم خودش ID_ دارد
+        anchor = node_id
         return f'<a href="freeplane:/%20/{encoded_path}#{anchor}" style="text-decoration:none; color:#007acc;">{path_text}</a>'
 
     def __build_outline_recursive(self, children, depth=0, max_depth=3):
