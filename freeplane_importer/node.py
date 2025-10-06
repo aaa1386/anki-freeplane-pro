@@ -53,9 +53,10 @@ class Node:
             current = parent
 
     def should_create_card(self):
+        # فقط اگر anki:model یا anki:deck باشد کارت ساخته می‌شود
         return any(
             self.element.find(f'attribute[@NAME="{name}"]') is not None
-            for name in ['anki:model', 'anki:deck', 'anki:deckbranch']
+            for name in ['anki:model', 'anki:deck']
         )
 
     def get_fields(self, fields=None):
