@@ -40,23 +40,12 @@ class Node:
         return self.get_attribute('anki:model') or 'Freeplane basic'
 
     def get_final_deck(self):
-        deckbranch = self.get_attribute('anki:deckbranch')
-        if deckbranch and deckbranch.strip():
-            return deckbranch.strip()
+        # فقط anki:deck بررسی می‌شود، anki:deckbranch اصلاً استفاده نمی‌شود
         deck = self.get_attribute('anki:deck')
         if deck and deck.strip():
             return deck.strip()
-        current = self.element
-        while True:
-            parent = self.__get_parent_node(current)
-            if parent is None:
-                return 'FreeplaneDeck'
-            parent_deckbranch = parent.find('attribute[@NAME="anki:deckbranch"]')
-            if parent_deckbranch is not None:
-                val = parent_deckbranch.get('VALUE')
-                if val and val.strip():
-                    return val.strip()
-            current = parent
+        # اگر هیچ deck مشخص نشده بود، به طور پیش‌فرض نام FreeplaneDeck
+        return 'FreeplaneDeck'
 
     def should_create_card(self):
         # فقط اگر anki:model یا anki:deck باشد کارت ساخته می‌شود
