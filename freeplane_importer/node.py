@@ -2,6 +2,12 @@
 import uuid
 import os
 import urllib.parse
+import xml.etree.ElementTree as ET
+
+
+def get_inner_html(elem):
+    """تمام محتوای داخلی یک عنصر XML را به صورت HTML برمی‌گرداند"""
+    return ''.join(ET.tostring(e, encoding='unicode') for e in elem)
 
 
 class Node:
@@ -68,7 +74,7 @@ class Node:
 
     def __parse_fields(self, fields):
         attributes = self.element.findall('attribute')
-        node_text = self.element.get('TEXT') or ''
+        node_text = self.get_text() or ''
         node_id = self.get_node_id()
 
         # تبدیل \n به <br> برای نمایش درست در آنکی
@@ -84,7 +90,6 @@ class Node:
                 fields[field_name] = value
 
         fields['Front'] = html_text
-
         fields['Ancestors'] = self.__build_custom_path_link(node_id)
         fields['URL'] = self.__build_freeplane_url()
 
@@ -115,7 +120,27 @@ class Node:
         return self.children
 
     def get_text(self):
-        return self.element.get('TEXT') or ''
+        # متن ساده (ویژگی TEXT)
+        text = self.element.get('TEXT')
+        if text:
+            return text
+
+        # اگر TEXT خالی بود، richcontent رو بررسی کن
+        rich = self.element.find('richcontent[@TYPE="NODE"]/html/body')
+        if rich is not None:
+            return get_inner_html(rich).strip()
+
+        return ''
+
+    def get_text_of_element(self, element):
+        """برگرداندن متن برای یک element (TEXT یا richcontent)"""
+        text = element.get('TEXT')
+        if text:
+            return text
+        rich = element.find('richcontent[@TYPE="NODE"]/html/body')
+        if rich is not None:
+            return get_inner_html(rich).strip()
+        return ''
 
     def __get_parent_node(self, element):
         current_id = element.get('ID')
@@ -141,7 +166,7 @@ class Node:
         path_nodes = []
         current = self.element
         while current is not None:
-            path_nodes.append(current.get('TEXT') or '')
+            path_nodes.append(self.get_text_of_element(current))
             current = self.__get_parent_node(current)
         path_nodes.reverse()
 
