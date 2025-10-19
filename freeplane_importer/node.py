@@ -197,7 +197,7 @@ class Node:
         anchor = node_id
         return f'<a href="freeplane:/%20/{encoded_path}#{anchor}" style="text-decoration:none; color:#007acc;">{path_text}</a>'
 
-    def __build_outline_recursive(self, children, depth=0, max_depth=3):
+    def __build_outline_recursive(self, children, depth=0, max_depth=1):
         if not children or depth >= max_depth:
             return ''
         bullet_styles = ['square', 'disc', 'circle']
